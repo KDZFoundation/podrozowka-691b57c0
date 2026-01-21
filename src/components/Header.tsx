@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Menu, X, Globe, LogIn, LogOut, User } from "lucide-react";
+import { Menu, X, Globe, LogIn, LogOut, User, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
@@ -69,10 +69,24 @@ const Header = () => {
               </select>
             </div>
 
+            {/* Dashboard button for logged in users */}
+            {!isLoading && user && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="hidden md:flex"
+                onClick={() => navigate("/dashboard")}
+              >
+                <LayoutDashboard className="w-4 h-4 mr-2" />
+                Mój Panel
+              </Button>
+            )}
+
             {/* Auth button */}
             {!isLoading && (
               <Button
-                variant={user ? "outline" : "default"}
+                variant={user ? "ghost" : "default"}
+                size="sm"
                 className="hidden md:flex"
                 onClick={handleAuthAction}
               >
@@ -108,8 +122,23 @@ const Header = () => {
               <a href="#distribution-map" className="text-foreground py-2 text-lg" onClick={() => setIsMenuOpen(false)}>Mapa</a>
               <a href="#shop" className="text-foreground py-2 text-lg" onClick={() => setIsMenuOpen(false)}>Sklep</a>
               <a href="#community-gallery" className="text-foreground py-2 text-lg" onClick={() => setIsMenuOpen(false)}>Społeczność</a>
+              
+              {user && (
+                <Button
+                  variant="outline"
+                  className="mt-2"
+                  onClick={() => {
+                    navigate("/dashboard");
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  <LayoutDashboard className="w-4 h-4 mr-2" />
+                  Mój Panel
+                </Button>
+              )}
+              
               <Button
-                variant={user ? "outline" : "default"}
+                variant={user ? "ghost" : "default"}
                 className="mt-2"
                 onClick={() => {
                   handleAuthAction();
