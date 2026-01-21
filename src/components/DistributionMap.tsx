@@ -1,49 +1,87 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { MapPin } from "lucide-react";
+import { MapPin, Users, Globe2 } from "lucide-react";
+import { MapContainer, TileLayer, Marker, Popup, CircleMarker } from "react-leaflet";
+import { Icon, divIcon } from "leaflet";
 import { supabase } from "@/integrations/supabase/client";
+import "leaflet/dist/leaflet.css";
 
 interface CountryCount {
   country: string;
   count: number;
+  lat: number;
+  lng: number;
 }
 
-// Country coordinates for Europe and beyond
-const countryCoordinates: Record<string, { x: number; y: number; name: string }> = {
-  "Polska": { x: 52, y: 35, name: "Polska" },
-  "Niemcy": { x: 45, y: 38, name: "Niemcy" },
-  "Francja": { x: 35, y: 45, name: "Francja" },
-  "Włochy": { x: 48, y: 52, name: "Włochy" },
-  "Hiszpania": { x: 28, y: 55, name: "Hiszpania" },
-  "Wielka Brytania": { x: 32, y: 32, name: "Wielka Brytania" },
-  "Ukraina": { x: 62, y: 38, name: "Ukraina" },
-  "Czechy": { x: 50, y: 42, name: "Czechy" },
-  "Węgry": { x: 54, y: 45, name: "Węgry" },
-  "Chorwacja": { x: 51, y: 50, name: "Chorwacja" },
-  "Grecja": { x: 56, y: 58, name: "Grecja" },
-  "Norwegia": { x: 45, y: 22, name: "Norwegia" },
-  "Turcja": { x: 68, y: 55, name: "Turcja" },
-  "USA": { x: 15, y: 40, name: "USA" },
-  "Chiny": { x: 82, y: 42, name: "Chiny" },
-  "Indie": { x: 78, y: 55, name: "Indie" },
-  "Tajlandia": { x: 85, y: 58, name: "Tajlandia" },
+// Country coordinates
+const countryCoordinates: Record<string, { lat: number; lng: number; name: string }> = {
+  "Polska": { lat: 52.0693, lng: 19.4803, name: "Polska" },
+  "Niemcy": { lat: 51.1657, lng: 10.4515, name: "Niemcy" },
+  "Francja": { lat: 46.2276, lng: 2.2137, name: "Francja" },
+  "Włochy": { lat: 41.8719, lng: 12.5674, name: "Włochy" },
+  "Hiszpania": { lat: 40.4637, lng: -3.7492, name: "Hiszpania" },
+  "Wielka Brytania": { lat: 55.3781, lng: -3.4360, name: "Wielka Brytania" },
+  "Ukraina": { lat: 48.3794, lng: 31.1656, name: "Ukraina" },
+  "Czechy": { lat: 49.8175, lng: 15.4730, name: "Czechy" },
+  "Węgry": { lat: 47.1625, lng: 19.5033, name: "Węgry" },
+  "Chorwacja": { lat: 45.1000, lng: 15.2000, name: "Chorwacja" },
+  "Grecja": { lat: 39.0742, lng: 21.8243, name: "Grecja" },
+  "Norwegia": { lat: 60.4720, lng: 8.4689, name: "Norwegia" },
+  "Turcja": { lat: 38.9637, lng: 35.2433, name: "Turcja" },
+  "USA": { lat: 37.0902, lng: -95.7129, name: "USA" },
+  "Chiny": { lat: 35.8617, lng: 104.1954, name: "Chiny" },
+  "Indie": { lat: 20.5937, lng: 78.9629, name: "Indie" },
+  "Tajlandia": { lat: 15.8700, lng: 100.9925, name: "Tajlandia" },
+  "Austria": { lat: 47.5162, lng: 14.5501, name: "Austria" },
+  "Holandia": { lat: 52.1326, lng: 5.2913, name: "Holandia" },
+  "Belgia": { lat: 50.5039, lng: 4.4699, name: "Belgia" },
+  "Portugalia": { lat: 39.3999, lng: -8.2245, name: "Portugalia" },
+  "Szwecja": { lat: 60.1282, lng: 18.6435, name: "Szwecja" },
+  "Dania": { lat: 56.2639, lng: 9.5018, name: "Dania" },
+  "Szwajcaria": { lat: 46.8182, lng: 8.2275, name: "Szwajcaria" },
+  "Japonia": { lat: 36.2048, lng: 138.2529, name: "Japonia" },
+  "Korea Południowa": { lat: 35.9078, lng: 127.7669, name: "Korea Południowa" },
+  "Australia": { lat: -25.2744, lng: 133.7751, name: "Australia" },
+  "Kanada": { lat: 56.1304, lng: -106.3468, name: "Kanada" },
+  "Meksyk": { lat: 23.6345, lng: -102.5528, name: "Meksyk" },
+  "Brazylia": { lat: -14.2350, lng: -51.9253, name: "Brazylia" },
+  "Argentyna": { lat: -38.4161, lng: -63.6167, name: "Argentyna" },
+};
+
+// Custom marker icon for Poland
+const polandIcon = new Icon({
+  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
+// Custom cluster icon
+const createClusterIcon = (count: number) => {
+  const size = Math.min(Math.max(count * 3, 20), 50);
+  return divIcon({
+    html: `<div class="flex items-center justify-center w-full h-full bg-primary text-primary-foreground rounded-full font-bold text-sm shadow-lg">${count}</div>`,
+    className: "",
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
 };
 
 const DistributionMap = () => {
   const [countryData, setCountryData] = useState<CountryCount[]>([]);
-  const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchDistribution = async () => {
       const { data, error } = await supabase
-        .from('postcards')
-        .select('given_to_country')
-        .eq('status', 'delivered')
-        .not('given_to_country', 'is', null);
+        .from("postcards")
+        .select("given_to_country")
+        .eq("status", "delivered")
+        .not("given_to_country", "is", null);
 
       if (!error && data) {
-        // Count postcards per country
         const countMap: Record<string, number> = {};
         data.forEach((item) => {
           const country = item.given_to_country;
@@ -52,10 +90,20 @@ const DistributionMap = () => {
           }
         });
 
-        const countryArray = Object.entries(countMap).map(([country, count]) => ({
-          country,
-          count,
-        }));
+        const countryArray: CountryCount[] = Object.entries(countMap)
+          .map(([country, count]) => {
+            const coords = countryCoordinates[country];
+            if (coords) {
+              return {
+                country,
+                count,
+                lat: coords.lat,
+                lng: coords.lng,
+              };
+            }
+            return null;
+          })
+          .filter((item): item is CountryCount => item !== null);
 
         setCountryData(countryArray);
       }
@@ -84,142 +132,105 @@ const DistributionMap = () => {
             Gdzie są nasze Podróżówki?
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Śledź, do których krajów trafiły Podróżówki rozdane przez naszą społeczność.
+            Śledź na żywo, do których krajów trafiły Podróżówki rozdane przez naszą społeczność.
           </p>
         </motion.div>
 
-        {/* Interactive Map Container */}
+        {/* Stats row */}
+        <div className="flex flex-wrap justify-center gap-6 mb-8">
+          <div className="flex items-center gap-2 bg-card px-4 py-2 rounded-full shadow-soft">
+            <Globe2 className="w-5 h-5 text-accent" />
+            <span className="text-foreground font-medium">
+              {countryData.length} krajów
+            </span>
+          </div>
+          <div className="flex items-center gap-2 bg-card px-4 py-2 rounded-full shadow-soft">
+            <MapPin className="w-5 h-5 text-primary" />
+            <span className="text-foreground font-medium">
+              {totalDelivered} Podróżówek dostarczonych
+            </span>
+          </div>
+        </div>
+
+        {/* Leaflet Map */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
-          className="relative bg-card rounded-2xl shadow-card p-6 md:p-10 overflow-hidden"
+          className="rounded-2xl overflow-hidden shadow-card"
         >
-          {/* World map SVG background */}
-          <div className="relative aspect-[2/1] min-h-[300px] md:min-h-[400px]">
-            {/* Simple world map outline */}
-            <svg
-              viewBox="0 0 100 60"
-              className="absolute inset-0 w-full h-full"
-              preserveAspectRatio="xMidYMid meet"
+          <div className="h-[400px] md:h-[500px] w-full">
+            <MapContainer
+              center={[52.0693, 19.4803]}
+              zoom={3}
+              scrollWheelZoom={true}
+              className="h-full w-full"
+              style={{ background: "hsl(var(--muted))" }}
             >
-              {/* Simplified continent shapes */}
-              <defs>
-                <linearGradient id="mapGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="hsl(var(--muted))" stopOpacity="0.3" />
-                  <stop offset="100%" stopColor="hsl(var(--muted))" stopOpacity="0.1" />
-                </linearGradient>
-              </defs>
-              
-              {/* Europe rough shape */}
-              <path
-                d="M 25 25 Q 35 20 50 22 L 60 28 Q 65 35 60 45 L 50 55 Q 40 52 30 48 L 25 40 Q 22 32 25 25"
-                fill="url(#mapGradient)"
-                stroke="hsl(var(--border))"
-                strokeWidth="0.3"
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
-              
-              {/* Asia rough shape */}
-              <path
-                d="M 60 20 Q 75 15 90 25 L 95 45 Q 90 55 80 58 L 70 55 Q 62 45 60 35 L 60 20"
-                fill="url(#mapGradient)"
-                stroke="hsl(var(--border))"
-                strokeWidth="0.3"
-              />
-              
-              {/* Americas rough shape */}
-              <path
-                d="M 5 25 Q 15 20 22 28 L 20 45 Q 18 55 12 58 L 8 50 Q 3 40 5 25"
-                fill="url(#mapGradient)"
-                stroke="hsl(var(--border))"
-                strokeWidth="0.3"
-              />
-            </svg>
 
-            {/* Country markers */}
-            {countryData.map((country) => {
-              const coords = countryCoordinates[country.country];
-              if (!coords) return null;
-
-              const size = Math.min(Math.max(country.count * 2, 8), 24);
-
-              return (
-                <motion.div
-                  key={country.country}
-                  initial={{ scale: 0 }}
-                  whileInView={{ scale: 1 }}
-                  transition={{ duration: 0.3, delay: Math.random() * 0.5 }}
-                  viewport={{ once: true }}
-                  className="absolute cursor-pointer"
-                  style={{
-                    left: `${coords.x}%`,
-                    top: `${coords.y}%`,
-                    transform: 'translate(-50%, -50%)',
-                  }}
-                  onMouseEnter={() => setHoveredCountry(country.country)}
-                  onMouseLeave={() => setHoveredCountry(null)}
-                >
-                  <div
-                    className="relative flex items-center justify-center bg-primary rounded-full shadow-elevated animate-pulse-soft"
-                    style={{ width: size, height: size }}
-                  >
-                    {hoveredCountry === country.country && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="absolute bottom-full mb-2 bg-foreground text-background text-xs px-3 py-1.5 rounded-lg whitespace-nowrap shadow-elevated z-10"
-                      >
-                        <span className="font-semibold">{coords.name}</span>
-                        <br />
-                        <span className="text-primary-foreground/80">{country.count} Podróżówek</span>
-                      </motion.div>
-                    )}
+              {/* Poland marker - origin */}
+              <Marker position={[52.0693, 19.4803]} icon={polandIcon}>
+                <Popup>
+                  <div className="text-center p-2">
+                    <p className="font-bold text-lg">🇵🇱 Polska</p>
+                    <p className="text-sm text-gray-600">Punkt startu wszystkich Podróżówek</p>
                   </div>
-                </motion.div>
-              );
-            })}
+                </Popup>
+              </Marker>
 
-            {/* Poland marker (always visible) */}
-            <div
-              className="absolute"
-              style={{
-                left: `${countryCoordinates["Polska"].x}%`,
-                top: `${countryCoordinates["Polska"].y}%`,
-                transform: 'translate(-50%, -50%)',
-              }}
-            >
-              <div className="relative">
-                <div className="w-6 h-6 bg-primary rounded-full shadow-elevated flex items-center justify-center">
-                  <MapPin className="w-4 h-4 text-primary-foreground" />
-                </div>
-                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs font-medium text-foreground whitespace-nowrap">
-                  Polska
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Legend */}
-          <div className="mt-8 flex flex-wrap justify-center gap-6">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-primary rounded-full" />
-              <span className="text-sm text-muted-foreground">Podróżówka dostarczona</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-primary" />
-              <span className="text-sm text-muted-foreground">Polska - punkt startu</span>
-            </div>
-          </div>
-
-          {/* Stats summary */}
-          <div className="mt-6 text-center">
-            <p className="text-muted-foreground">
-              Łącznie <span className="font-bold text-foreground">{totalDelivered}</span> Podróżówek 
-              dotarło do <span className="font-bold text-foreground">{countryData.length}</span> krajów
-            </p>
+              {/* Country markers */}
+              {countryData.map((country) => (
+                <CircleMarker
+                  key={country.country}
+                  center={[country.lat, country.lng]}
+                  radius={Math.min(Math.max(country.count * 3, 8), 25)}
+                  pathOptions={{
+                    color: "hsl(145, 35%, 32%)",
+                    fillColor: "hsl(145, 35%, 32%)",
+                    fillOpacity: 0.7,
+                    weight: 2,
+                  }}
+                >
+                  <Popup>
+                    <div className="text-center p-2">
+                      <p className="font-bold text-lg">{country.country}</p>
+                      <p className="text-sm">
+                        <span className="font-semibold text-green-600">{country.count}</span>{" "}
+                        {country.count === 1 ? "Podróżówka" : "Podróżówek"}
+                      </p>
+                    </div>
+                  </Popup>
+                </CircleMarker>
+              ))}
+            </MapContainer>
           </div>
         </motion.div>
+
+        {/* Legend */}
+        <div className="mt-6 flex flex-wrap justify-center gap-6 text-sm">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-primary rounded-full" />
+            <span className="text-muted-foreground">Polska - punkt startu</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-accent rounded-full" />
+            <span className="text-muted-foreground">Kraje z dostarczonymi Podróżówkami</span>
+          </div>
+        </div>
+
+        {/* Empty state */}
+        {!isLoading && countryData.length === 0 && (
+          <div className="mt-8 text-center">
+            <p className="text-muted-foreground">
+              Brak jeszcze dostarczonych Podróżówek. Bądź pierwszy i zarejestruj swoją!
+            </p>
+          </div>
+        )}
       </div>
     </section>
   );
