@@ -16,6 +16,11 @@ const Hero = () => {
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 text-center pt-20">
         <div className="max-w-4xl mx-auto">
+          {/* Quote from documentation */}
+          <p className="italic text-primary-foreground/80 text-sm md:text-base mb-4 animate-fade-up">
+            „Dla mnie podróżowanie jest jak oddychanie. Muszę podróżować, żeby żyć"
+          </p>
+          
           <span className="inline-block px-4 py-2 bg-primary/90 text-primary-foreground rounded-full text-sm font-medium mb-6 animate-fade-up">
             Odwrócona pocztówka z Polski
           </span>
@@ -24,9 +29,13 @@ const Hero = () => {
             Podróżówka
           </h1>
           
-          <p className="text-lg md:text-xl text-primary-foreground/90 max-w-2xl mx-auto mb-8 leading-relaxed animate-fade-up" style={{ animationDelay: "0.2s" }}>
-            Fizyczne podziękowanie, które wręczysz osobom spotkanym podczas podróży. 
-            Pokaż światu piękno Polski i buduj mosty między kulturami.
+          <p className="text-lg md:text-xl text-primary-foreground/90 max-w-2xl mx-auto mb-4 leading-relaxed animate-fade-up" style={{ animationDelay: "0.2s" }}>
+            Pocztówka + Podróż = Podróżówka
+          </p>
+          
+          <p className="text-base md:text-lg text-primary-foreground/80 max-w-2xl mx-auto mb-8 leading-relaxed animate-fade-up" style={{ animationDelay: "0.25s" }}>
+            Fizyczne podziękowanie, które zabierasz ze sobą i dajesz w prezencie. 
+            Jest podziękowaniem za życzliwość, pomoc, a także sposobem na poznawanie Polski przez świat.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-up" style={{ animationDelay: "0.3s" }}>
@@ -44,15 +53,15 @@ const Hero = () => {
             </a>
           </div>
 
-          {/* Stats */}
+          {/* Stats - Updated according to documentation: 32 designs, 16 countries */}
           <div className="mt-16 grid grid-cols-3 gap-8 max-w-lg mx-auto animate-fade-up" style={{ animationDelay: "0.4s" }}>
             <div className="text-center">
               <p className="font-display text-3xl md:text-4xl font-bold text-primary-foreground">16</p>
               <p className="text-sm text-primary-foreground/70 mt-1">języków</p>
             </div>
             <div className="text-center">
-              <p className="font-display text-3xl md:text-4xl font-bold text-primary-foreground">50+</p>
-              <p className="text-sm text-primary-foreground/70 mt-1">wzorów</p>
+              <p className="font-display text-3xl md:text-4xl font-bold text-primary-foreground">32</p>
+              <p className="text-sm text-primary-foreground/70 mt-1">wzory</p>
             </div>
             <div className="text-center">
               <p className="font-display text-3xl md:text-4xl font-bold text-primary-foreground">2k+</p>
