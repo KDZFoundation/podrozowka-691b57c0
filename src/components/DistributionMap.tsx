@@ -1,10 +1,23 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { MapPin, Users, Globe2 } from "lucide-react";
+import { MapPin, Globe2 } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Popup, CircleMarker } from "react-leaflet";
-import { Icon, divIcon } from "leaflet";
+import L from "leaflet";
 import { supabase } from "@/integrations/supabase/client";
 import "leaflet/dist/leaflet.css";
+
+// Fix for default marker icons in Leaflet with webpack/vite
+import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
+
+// @ts-ignore
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
 
 interface CountryCount {
   country: string;
@@ -48,26 +61,15 @@ const countryCoordinates: Record<string, { lat: number; lng: number; name: strin
   "Argentyna": { lat: -38.4161, lng: -63.6167, name: "Argentyna" },
 };
 
-// Custom marker icon for Poland
-const polandIcon = new Icon({
+// Custom red icon for Poland
+const polandIcon = new L.Icon({
   iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+  shadowUrl: markerShadow,
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
   shadowSize: [41, 41],
 });
-
-// Custom cluster icon
-const createClusterIcon = (count: number) => {
-  const size = Math.min(Math.max(count * 3, 20), 50);
-  return divIcon({
-    html: `<div class="flex items-center justify-center w-full h-full bg-primary text-primary-foreground rounded-full font-bold text-sm shadow-lg">${count}</div>`,
-    className: "",
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
-  });
-};
 
 const DistributionMap = () => {
   const [countryData, setCountryData] = useState<CountryCount[]>([]);
@@ -166,7 +168,6 @@ const DistributionMap = () => {
               zoom={3}
               scrollWheelZoom={true}
               className="h-full w-full"
-              style={{ background: "hsl(var(--muted))" }}
             >
               <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -190,8 +191,8 @@ const DistributionMap = () => {
                   center={[country.lat, country.lng]}
                   radius={Math.min(Math.max(country.count * 3, 8), 25)}
                   pathOptions={{
-                    color: "hsl(145, 35%, 32%)",
-                    fillColor: "hsl(145, 35%, 32%)",
+                    color: "#3d7a4a",
+                    fillColor: "#3d7a4a",
                     fillOpacity: 0.7,
                     weight: 2,
                   }}
