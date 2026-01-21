@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { Menu, X, Globe } from "lucide-react";
+import { Menu, X, Globe, LogIn, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 const languages = [
   { code: "pl", name: "Polski" },
@@ -12,6 +14,16 @@ const languages = [
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentLang, setCurrentLang] = useState("pl");
+  const { user, signOut, isLoading } = useAuth();
+  const navigate = useNavigate();
+
+  const handleAuthAction = () => {
+    if (user) {
+      signOut();
+    } else {
+      navigate("/auth");
+    }
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
@@ -29,14 +41,14 @@ const Header = () => {
             <a href="#about" className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium">
               O projekcie
             </a>
-            <a href="#map" className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium">
+            <a href="#distribution-map" className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium">
               Mapa
             </a>
             <a href="#shop" className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium">
               Sklep
             </a>
-            <a href="#gallery" className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium">
-              Galeria
+            <a href="#community-gallery" className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium">
+              Społeczność
             </a>
           </nav>
 
@@ -56,10 +68,27 @@ const Header = () => {
                 ))}
               </select>
             </div>
-            
-            <Button variant="default" className="hidden md:flex">
-              Kup Podróżówkę
-            </Button>
+
+            {/* Auth button */}
+            {!isLoading && (
+              <Button
+                variant={user ? "outline" : "default"}
+                className="hidden md:flex"
+                onClick={handleAuthAction}
+              >
+                {user ? (
+                  <>
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Wyloguj
+                  </>
+                ) : (
+                  <>
+                    <LogIn className="w-4 h-4 mr-2" />
+                    Zaloguj się
+                  </>
+                )}
+              </Button>
+            )}
 
             {/* Mobile menu button */}
             <button
@@ -75,11 +104,30 @@ const Header = () => {
         {isMenuOpen && (
           <nav className="md:hidden py-4 border-t border-border animate-fade-in">
             <div className="flex flex-col gap-4">
-              <a href="#about" className="text-foreground py-2 text-lg">O projekcie</a>
-              <a href="#map" className="text-foreground py-2 text-lg">Mapa</a>
-              <a href="#shop" className="text-foreground py-2 text-lg">Sklep</a>
-              <a href="#gallery" className="text-foreground py-2 text-lg">Galeria</a>
-              <Button variant="default" className="mt-2">Kup Podróżówkę</Button>
+              <a href="#about" className="text-foreground py-2 text-lg" onClick={() => setIsMenuOpen(false)}>O projekcie</a>
+              <a href="#distribution-map" className="text-foreground py-2 text-lg" onClick={() => setIsMenuOpen(false)}>Mapa</a>
+              <a href="#shop" className="text-foreground py-2 text-lg" onClick={() => setIsMenuOpen(false)}>Sklep</a>
+              <a href="#community-gallery" className="text-foreground py-2 text-lg" onClick={() => setIsMenuOpen(false)}>Społeczność</a>
+              <Button
+                variant={user ? "outline" : "default"}
+                className="mt-2"
+                onClick={() => {
+                  handleAuthAction();
+                  setIsMenuOpen(false);
+                }}
+              >
+                {user ? (
+                  <>
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Wyloguj
+                  </>
+                ) : (
+                  <>
+                    <LogIn className="w-4 h-4 mr-2" />
+                    Zaloguj się
+                  </>
+                )}
+              </Button>
             </div>
           </nav>
         )}
