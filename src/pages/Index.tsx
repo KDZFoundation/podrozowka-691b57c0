@@ -3,7 +3,6 @@ import Hero from "@/components/Hero";
 import PostcardPreview from "@/components/PostcardPreview";
 import PlatformStats from "@/components/PlatformStats";
 import About from "@/components/About";
-import EuropeMap from "@/components/EuropeMap";
 import DistributionMap from "@/components/DistributionMap";
 import CountryCategories from "@/components/CountryCategories";
 import UserRanking from "@/components/UserRanking";
@@ -20,7 +19,6 @@ const Index = () => {
       <PostcardPreview />
       <PlatformStats />
       <About />
-      <EuropeMap />
       <DistributionMap />
       <CountryCategories />
       <UserRanking />
