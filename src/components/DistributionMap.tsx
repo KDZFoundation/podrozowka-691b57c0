@@ -1,12 +1,11 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { MapPin, Globe2 } from "lucide-react";
-import { MapContainer, TileLayer, Marker, Popup, CircleMarker } from "react-leaflet";
 import L from "leaflet";
 import { supabase } from "@/integrations/supabase/client";
 import "leaflet/dist/leaflet.css";
 
-// Fix for default marker icons in Leaflet with webpack/vite
+// Fix for default marker icons in Leaflet with Vite
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
@@ -75,6 +74,27 @@ const DistributionMap = () => {
   const [countryData, setCountryData] = useState<CountryCount[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const markersLayerRef = useRef<L.LayerGroup | null>(null);
+
+  const leafletColors = useMemo(() => {
+    // These are CSS variables defined in index.css (HSL channels)
+    if (typeof window === "undefined") {
+      return {
+        primary: "hsl(0 72% 45%)",
+        accent: "hsl(145 35% 32%)",
+      };
+    }
+    const root = getComputedStyle(document.documentElement);
+    const primaryHsl = root.getPropertyValue("--primary").trim();
+    const accentHsl = root.getPropertyValue("--accent").trim();
+    return {
+      primary: primaryHsl ? `hsl(${primaryHsl})` : "hsl(0 72% 45%)",
+      accent: accentHsl ? `hsl(${accentHsl})` : "hsl(145 35% 32%)",
+    };
+  }, []);
+
   useEffect(() => {
     const fetchDistribution = async () => {
       const { data, error } = await supabase
@@ -115,6 +135,78 @@ const DistributionMap = () => {
     fetchDistribution();
   }, []);
 
+  // Init Leaflet map once (no react-leaflet to avoid React context consumer issues)
+  useEffect(() => {
+    if (!mapContainerRef.current) return;
+    if (mapRef.current) return;
+
+    const map = L.map(mapContainerRef.current, {
+      center: [52.0693, 19.4803],
+      zoom: 3,
+      zoomControl: true,
+      scrollWheelZoom: true,
+      worldCopyJump: true,
+    });
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19,
+    }).addTo(map);
+
+    const layer = L.layerGroup().addTo(map);
+
+    mapRef.current = map;
+    markersLayerRef.current = layer;
+
+    return () => {
+      layer.clearLayers();
+      map.remove();
+      markersLayerRef.current = null;
+      mapRef.current = null;
+    };
+  }, []);
+
+  // Render markers whenever data changes
+  useEffect(() => {
+    const layer = markersLayerRef.current;
+    if (!layer) return;
+
+    layer.clearLayers();
+
+    // Poland origin marker
+    L.marker([52.0693, 19.4803], { icon: polandIcon })
+      .bindPopup(
+        `<div style="text-align:center; padding:8px;">
+            <div style="font-weight:700;">🇵🇱 Polska</div>
+            <div style="font-size:12px;">Punkt startu wszystkich Podróżówek</div>
+         </div>`,
+      )
+      .addTo(layer);
+
+    // Delivered markers (circle size by count)
+    countryData.forEach((c) => {
+      const radius = Math.min(Math.max(c.count * 3, 8), 25);
+      L.circleMarker([c.lat, c.lng], {
+        radius,
+        color: leafletColors.accent,
+        fillColor: leafletColors.accent,
+        fillOpacity: 0.7,
+        weight: 2,
+      })
+        .bindPopup(
+          `<div style="text-align:center; padding:8px;">
+              <div style="font-weight:700;">${c.country}</div>
+              <div style="font-size:12px;">
+                <span style="font-weight:700; color:${leafletColors.accent};">${c.count}</span>
+                ${c.count === 1 ? "Podróżówka" : "Podróżówek"}
+              </div>
+           </div>`,
+        )
+        .addTo(layer);
+    });
+  }, [countryData, leafletColors.accent]);
+
   const totalDelivered = countryData.reduce((sum, c) => sum + c.count, 0);
 
   return (
@@ -154,7 +246,7 @@ const DistributionMap = () => {
           </div>
         </div>
 
-        {/* Leaflet Map */}
+        {/* Leaflet Map (OpenStreetMap) */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
@@ -162,54 +254,11 @@ const DistributionMap = () => {
           viewport={{ once: true }}
           className="rounded-2xl overflow-hidden shadow-card"
         >
-          <div className="h-[400px] md:h-[500px] w-full">
-            <MapContainer
-              center={[52.0693, 19.4803]}
-              zoom={3}
-              scrollWheelZoom={true}
-              className="h-full w-full"
-            >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-
-              {/* Poland marker - origin */}
-              <Marker position={[52.0693, 19.4803]} icon={polandIcon}>
-                <Popup>
-                  <div className="text-center p-2">
-                    <p className="font-bold text-lg">🇵🇱 Polska</p>
-                    <p className="text-sm text-gray-600">Punkt startu wszystkich Podróżówek</p>
-                  </div>
-                </Popup>
-              </Marker>
-
-              {/* Country markers */}
-              {countryData.map((country) => (
-                <CircleMarker
-                  key={country.country}
-                  center={[country.lat, country.lng]}
-                  radius={Math.min(Math.max(country.count * 3, 8), 25)}
-                  pathOptions={{
-                    color: "#3d7a4a",
-                    fillColor: "#3d7a4a",
-                    fillOpacity: 0.7,
-                    weight: 2,
-                  }}
-                >
-                  <Popup>
-                    <div className="text-center p-2">
-                      <p className="font-bold text-lg">{country.country}</p>
-                      <p className="text-sm">
-                        <span className="font-semibold text-green-600">{country.count}</span>{" "}
-                        {country.count === 1 ? "Podróżówka" : "Podróżówek"}
-                      </p>
-                    </div>
-                  </Popup>
-                </CircleMarker>
-              ))}
-            </MapContainer>
-          </div>
+          <div
+            ref={mapContainerRef}
+            className="h-[400px] md:h-[500px] w-full"
+            aria-label="Mapa dystrybucji Podróżówek"
+          />
         </motion.div>
 
         {/* Legend */}
