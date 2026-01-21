@@ -14,13 +14,141 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      platform_stats: {
+        Row: {
+          id: string
+          total_countries: number
+          total_given: number
+          total_members: number
+          total_purchased: number
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          total_countries?: number
+          total_given?: number
+          total_members?: number
+          total_purchased?: number
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          total_countries?: number
+          total_given?: number
+          total_members?: number
+          total_purchased?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      postcards: {
+        Row: {
+          created_at: string
+          design_type: string
+          given_at: string | null
+          given_to_country: string | null
+          given_to_name: string | null
+          id: string
+          language: string
+          latitude: number | null
+          longitude: number | null
+          message: string | null
+          owner_id: string
+          photo_url: string | null
+          received_at: string | null
+          receiver_id: string | null
+          status: string
+          tracking_code: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          design_type?: string
+          given_at?: string | null
+          given_to_country?: string | null
+          given_to_name?: string | null
+          id?: string
+          language: string
+          latitude?: number | null
+          longitude?: number | null
+          message?: string | null
+          owner_id: string
+          photo_url?: string | null
+          received_at?: string | null
+          receiver_id?: string | null
+          status?: string
+          tracking_code: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          design_type?: string
+          given_at?: string | null
+          given_to_country?: string | null
+          given_to_name?: string | null
+          id?: string
+          language?: string
+          latitude?: number | null
+          longitude?: number | null
+          message?: string | null
+          owner_id?: string
+          photo_url?: string | null
+          received_at?: string | null
+          receiver_id?: string | null
+          status?: string
+          tracking_code?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          postcards_given: number
+          postcards_received: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          postcards_given?: number
+          postcards_received?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          postcards_given?: number
+          postcards_received?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_tracking_code: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never
