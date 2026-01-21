@@ -47,13 +47,16 @@ const About = () => {
               </h2>
               <p className="text-muted-foreground text-lg mb-6 leading-relaxed">
                 Podróżówka to wyjątkowa koncepcja "odwróconej pocztówki". Zamiast wysyłać 
-                pocztówki do domu, wręczasz je osobom, które spotkasz podczas podróży – 
-                jako podziękowanie za ich gościnność, pomoc czy po prostu miły gest.
+                pocztówki do domu, zabierasz je ze sobą i wręczasz jako podziękowanie za życzliwość, 
+                pomoc, lub po prostu jako miły gest dla osób spotkanych w podróży.
               </p>
-              <p className="text-muted-foreground mb-8">
-                Każda karta prezentuje piękno Polski i zawiera napis "Dziękuję" lub 
-                "Pozdrowienia" w języku odbiorcy. To doskonały sposób na bycie 
-                ambasadorem polskiej kultury.
+              <p className="text-muted-foreground mb-4">
+                Każda karta prezentuje piękno Polski – krajobrazy, architekturę, dzieła polskich artystów 
+                – i zawiera napis "Dziękuję" lub "Pozdrowienia" w języku odbiorcy.
+              </p>
+              <p className="text-muted-foreground mb-8 italic text-sm">
+                Na odwrocie każdej Podróżówki znajdziesz mapę Europy z zaznaczoną Polską, 
+                miejsce na wiadomość i informację o autorze fotografii.
               </p>
 
               {/* Features grid */}

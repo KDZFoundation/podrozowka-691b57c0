@@ -8,27 +8,29 @@ interface CountryCategory {
   nameLocal: string;
   flag: string;
   thankYou: string;
+  greetings: string;
   sold: number;
   available: number;
 }
 
 const countries: CountryCategory[] = [
-  { id: "china", name: "Chiny", nameLocal: "中国", flag: "🇨🇳", thankYou: "谢谢", sold: 342, available: 12 },
-  { id: "italy", name: "Włochy", nameLocal: "Italia", flag: "🇮🇹", thankYou: "Grazie", sold: 287, available: 10 },
-  { id: "thailand", name: "Tajlandia", nameLocal: "ประเทศไทย", flag: "🇹🇭", thankYou: "ขอบคุณ", sold: 198, available: 8 },
-  { id: "germany", name: "Niemcy", nameLocal: "Deutschland", flag: "🇩🇪", thankYou: "Danke", sold: 256, available: 11 },
-  { id: "france", name: "Francja", nameLocal: "France", flag: "🇫🇷", thankYou: "Merci", sold: 234, available: 9 },
-  { id: "spain", name: "Hiszpania", nameLocal: "España", flag: "🇪🇸", thankYou: "Gracias", sold: 189, available: 8 },
-  { id: "japan", name: "Japonia", nameLocal: "日本", flag: "🇯🇵", thankYou: "ありがとう", sold: 312, available: 10 },
-  { id: "korea", name: "Korea Płd.", nameLocal: "한국", flag: "🇰🇷", thankYou: "감사합니다", sold: 167, available: 7 },
-  { id: "usa", name: "USA", nameLocal: "United States", flag: "🇺🇸", thankYou: "Thank you", sold: 421, available: 14 },
-  { id: "uk", name: "Wielka Brytania", nameLocal: "United Kingdom", flag: "🇬🇧", thankYou: "Thank you", sold: 298, available: 11 },
-  { id: "portugal", name: "Portugalia", nameLocal: "Portugal", flag: "🇵🇹", thankYou: "Obrigado", sold: 134, available: 6 },
-  { id: "netherlands", name: "Holandia", nameLocal: "Nederland", flag: "🇳🇱", thankYou: "Dank u", sold: 156, available: 7 },
-  { id: "sweden", name: "Szwecja", nameLocal: "Sverige", flag: "🇸🇪", thankYou: "Tack", sold: 112, available: 5 },
-  { id: "norway", name: "Norwegia", nameLocal: "Norge", flag: "🇳🇴", thankYou: "Takk", sold: 98, available: 5 },
-  { id: "russia", name: "Rosja", nameLocal: "Россия", flag: "🇷🇺", thankYou: "Спасибо", sold: 145, available: 6 },
-  { id: "arabic", name: "Arabski", nameLocal: "العربية", flag: "🇸🇦", thankYou: "شكراً", sold: 123, available: 5 },
+  // Według dokumentacji projektu - 16 krajów językowych, 2 wzory na kraj
+  { id: "germany", name: "Niemcy", nameLocal: "Deutschland", flag: "🇩🇪", thankYou: "Danke", greetings: "Grüße", sold: 256, available: 2 },
+  { id: "italy", name: "Włochy", nameLocal: "Italia", flag: "🇮🇹", thankYou: "Grazie", greetings: "Saluti", sold: 287, available: 2 },
+  { id: "spain", name: "Hiszpania", nameLocal: "España", flag: "🇪🇸", thankYou: "Gracias", greetings: "Saludos", sold: 189, available: 2 },
+  { id: "uk", name: "Anglia", nameLocal: "England", flag: "🇬🇧", thankYou: "Thank you", greetings: "Greetings", sold: 298, available: 2 },
+  { id: "france", name: "Francja", nameLocal: "France", flag: "🇫🇷", thankYou: "Merci", greetings: "Salutations", sold: 234, available: 2 },
+  { id: "ukraine", name: "Ukraina", nameLocal: "Україна", flag: "🇺🇦", thankYou: "Дякую", greetings: "Вітання", sold: 178, available: 2 },
+  { id: "thailand", name: "Tajlandia", nameLocal: "ประเทศไทย", flag: "🇹🇭", thankYou: "ขอบคุณ", greetings: "สวัสดี", sold: 198, available: 2 },
+  { id: "india", name: "Indie", nameLocal: "भारत", flag: "🇮🇳", thankYou: "धन्यवाद", greetings: "नमस्ते", sold: 145, available: 2 },
+  { id: "turkey", name: "Turcja", nameLocal: "Türkiye", flag: "🇹🇷", thankYou: "Teşekkürler", greetings: "Selamlar", sold: 167, available: 2 },
+  { id: "usa", name: "USA", nameLocal: "United States", flag: "🇺🇸", thankYou: "Thank you", greetings: "Greetings", sold: 421, available: 2 },
+  { id: "czech", name: "Czechy", nameLocal: "Česko", flag: "🇨🇿", thankYou: "Děkuji", greetings: "Pozdravy", sold: 134, available: 2 },
+  { id: "croatia", name: "Chorwacja", nameLocal: "Hrvatska", flag: "🇭🇷", thankYou: "Hvala", greetings: "Pozdrav", sold: 112, available: 2 },
+  { id: "greece", name: "Grecja", nameLocal: "Ελλάδα", flag: "🇬🇷", thankYou: "Ευχαριστώ", greetings: "Χαιρετισμούς", sold: 156, available: 2 },
+  { id: "hungary", name: "Węgry", nameLocal: "Magyarország", flag: "🇭🇺", thankYou: "Köszönöm", greetings: "Üdvözlet", sold: 98, available: 2 },
+  { id: "china", name: "Chiny", nameLocal: "中国", flag: "🇨🇳", thankYou: "谢谢", greetings: "问候", sold: 342, available: 2 },
+  { id: "norway", name: "Norwegia", nameLocal: "Norge", flag: "🇳🇴", thankYou: "Takk", greetings: "Hilsen", sold: 89, available: 2 },
 ];
 
 const AnimatedCounter = ({ value, suffix = "" }: { value: number; suffix?: string }) => {
@@ -113,12 +115,20 @@ const CountryCategories = () => {
                 {country.nameLocal}
               </p>
 
-              {/* Thank you in local language */}
-              <div className="bg-secondary rounded-lg px-3 py-2 mb-3">
-                <p className="text-xs text-muted-foreground mb-1">Dziękuję:</p>
-                <p className="font-display text-lg text-foreground font-medium">
-                  {country.thankYou}
-                </p>
+              {/* Thank you and Greetings in local language */}
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <div className="bg-secondary rounded-lg px-2 py-2">
+                  <p className="text-xs text-muted-foreground mb-0.5">Dziękuję:</p>
+                  <p className="font-display text-sm text-foreground font-medium truncate">
+                    {country.thankYou}
+                  </p>
+                </div>
+                <div className="bg-secondary rounded-lg px-2 py-2">
+                  <p className="text-xs text-muted-foreground mb-0.5">Pozdrowienia:</p>
+                  <p className="font-display text-sm text-foreground font-medium truncate">
+                    {country.greetings}
+                  </p>
+                </div>
               </div>
 
               {/* Sales counter */}
