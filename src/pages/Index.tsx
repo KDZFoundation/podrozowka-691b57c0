@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
+import PostcardPreview from "@/components/PostcardPreview";
 import About from "@/components/About";
 import EuropeMap from "@/components/EuropeMap";
 import CountryCategories from "@/components/CountryCategories";
@@ -12,6 +13,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <Hero />
+      <PostcardPreview />
       <About />
       <EuropeMap />
       <CountryCategories />
