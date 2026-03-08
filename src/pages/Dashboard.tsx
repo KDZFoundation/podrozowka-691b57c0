@@ -139,8 +139,8 @@ const Dashboard = () => {
         <RankCard
           totalPoints={profile?.total_points ?? 0}
           currentRank={profile?.current_rank ?? 'Zwiadowca'}
-          uniqueCountries={0}
-          registeredRelations={0}
+          uniqueCountries={gamifData?.uniqueCountries ?? 0}
+          registeredRelations={gamifData?.registeredRelations ?? 0}
         />
         {activeTab === 'overview' && <UserStats profile={profile} userId={user.id} />}
         {activeTab === 'my-orders' && <MyOrders userId={user.id} />}
