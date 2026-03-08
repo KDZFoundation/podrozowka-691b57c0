@@ -507,6 +507,47 @@ export type Database = {
           },
         ]
       }
+      recipient_registrations: {
+        Row: {
+          contact_opt_in: boolean
+          created_at: string
+          id: string
+          inventory_unit_id: string
+          recipient_email: string | null
+          recipient_message: string | null
+          recipient_name: string
+          registered_at: string
+        }
+        Insert: {
+          contact_opt_in?: boolean
+          created_at?: string
+          id?: string
+          inventory_unit_id: string
+          recipient_email?: string | null
+          recipient_message?: string | null
+          recipient_name: string
+          registered_at?: string
+        }
+        Update: {
+          contact_opt_in?: boolean
+          created_at?: string
+          id?: string
+          inventory_unit_id?: string
+          recipient_email?: string | null
+          recipient_message?: string | null
+          recipient_name?: string
+          registered_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipient_registrations_inventory_unit_id_fkey"
+            columns: ["inventory_unit_id"]
+            isOneToOne: true
+            referencedRelation: "inventory_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shipments: {
         Row: {
           carrier: string | null
