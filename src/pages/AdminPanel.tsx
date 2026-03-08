@@ -210,6 +210,7 @@ const AdminPanel = () => {
           </div>
         )}
 
+        {activeTab === "map" && <AdminGlobalMap />}
         {activeTab === "countries" && <AdminCountries />}
         {activeTab === "card-designs" && <AdminCardDesigns />}
         {activeTab === "inventory" && <AdminInventory />}
