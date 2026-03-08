@@ -161,6 +161,7 @@ const AdminPanel = () => {
         {activeTab === 'qr-jobs' && <AdminQrJobs />}
         {activeTab === 'registrations' && <AdminRegistrations />}
         {activeTab === 'event-log' && <AdminEventLog />}
+        {activeTab === 'dev-tools' && <AdminDevTools />}
       </main>
     </div>
   );
