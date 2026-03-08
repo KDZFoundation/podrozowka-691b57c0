@@ -174,7 +174,8 @@ const AdminPanel = () => {
 
   const tabs = [
     { id: 'overview', label: 'Przegląd', icon: BarChart3 },
-    { id: 'postcards', label: 'Magazyn kartek', icon: Package },
+    { id: 'inventory', label: 'Magazyn fizyczny', icon: Box },
+    { id: 'postcards', label: 'Kartki (legacy)', icon: Package },
     { id: 'registrations', label: 'Rejestracje QR', icon: QrCode },
     { id: 'countries', label: 'Kraje', icon: Globe2 },
     { id: 'card-designs', label: 'Wzory kartek', icon: Image },
