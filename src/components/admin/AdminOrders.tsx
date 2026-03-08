@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Search, ArrowLeft } from "lucide-react";
+import { Loader2, Search, ArrowLeft, PackageCheck, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface OrderRow {
@@ -81,6 +81,10 @@ const AdminOrders = () => {
   const [page, setPage] = useState(0);
   const [selectedOrder, setSelectedOrder] = useState<OrderDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [reserving, setReserving] = useState(false);
+  const [reservedUnits, setReservedUnits] = useState<any[]>([]);
+  const [reserveError, setReserveError] = useState<string | null>(null);
+  const [shortages, setShortages] = useState<any[]>([]);
 
   useEffect(() => {
     fetchOrders();
@@ -141,7 +145,10 @@ const AdminOrders = () => {
           view_no: i.card_designs?.view_no,
         })),
       });
+      fetchReservedUnits(orderId);
     }
+    setReserveError(null);
+    setShortages([]);
     setDetailLoading(false);
   };
 
@@ -172,6 +179,45 @@ const AdminOrders = () => {
       if (selectedOrder) fetchDetail(orderId);
       fetchOrders();
     }
+  };
+
+  const fetchReservedUnits = async (orderId: string) => {
+    const { data } = await supabase
+      .from("inventory_units")
+      .select("id, internal_inventory_code, fulfillment_status, card_design_id, card_designs!inner(title, view_no, countries!inner(name_pl))")
+      .eq("order_id", orderId);
+    setReservedUnits(
+      (data || []).map((u: any) => ({
+        id: u.id,
+        code: u.internal_inventory_code,
+        fulfillment: u.fulfillment_status,
+        design: `V${u.card_designs?.view_no} ${u.card_designs?.title || ""}`,
+        country: u.card_designs?.countries?.name_pl,
+      }))
+    );
+  };
+
+  const reserveInventory = async (orderId: string) => {
+    setReserving(true);
+    setReserveError(null);
+    setShortages([]);
+
+    const { data, error } = await supabase.rpc("reserve_inventory_for_order", { _order_id: orderId });
+
+    if (error) {
+      setReserveError(error.message);
+      toast({ title: "Błąd rezerwacji", description: error.message, variant: "destructive" });
+    } else if (data && !(data as any).success) {
+      const result = data as any;
+      setReserveError(result.error);
+      if (result.shortages) setShortages(result.shortages);
+      toast({ title: "Nie udało się zarezerwować", description: result.error, variant: "destructive" });
+    } else {
+      toast({ title: "Sztuki zarezerwowane pomyślnie!" });
+      fetchReservedUnits(orderId);
+      fetchDetail(orderId);
+    }
+    setReserving(false);
   };
 
   const filteredOrders = orders.filter((o) => {
@@ -283,6 +329,71 @@ const AdminOrders = () => {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Inventory Reservation Section */}
+            <div className="bg-card rounded-xl p-6 shadow-soft space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="font-display font-semibold">Rezerwacja sztuk z magazynu</h4>
+                {selectedOrder.payment_status === 'paid' && reservedUnits.length === 0 && (
+                  <Button onClick={() => reserveInventory(selectedOrder.id)} disabled={reserving} size="sm" className="gap-2">
+                    {reserving ? <Loader2 className="w-4 h-4 animate-spin" /> : <PackageCheck className="w-4 h-4" />}
+                    Zarezerwuj sztuki
+                  </Button>
+                )}
+              </div>
+
+              {reserveError && (
+                <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 space-y-2">
+                  <div className="flex items-center gap-2 text-destructive">
+                    <AlertTriangle className="w-4 h-4" />
+                    <span className="text-sm font-medium">{reserveError}</span>
+                  </div>
+                  {shortages.length > 0 && (
+                    <div className="text-sm space-y-1">
+                      {shortages.map((s: any, i: number) => (
+                        <p key={i} className="text-destructive/80">
+                          Wzór {s.card_design_id?.slice(0, 8)}... — potrzeba: {s.requested}, dostępne: {s.available}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {selectedOrder.payment_status !== 'paid' && reservedUnits.length === 0 && (
+                <p className="text-sm text-muted-foreground">Rezerwacja możliwa po opłaceniu zamówienia.</p>
+              )}
+
+              {reservedUnits.length > 0 && (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border">
+                        <th className="text-left p-2 font-medium text-muted-foreground">Kod inwentarza</th>
+                        <th className="text-left p-2 font-medium text-muted-foreground">Kraj</th>
+                        <th className="text-left p-2 font-medium text-muted-foreground">Wzór</th>
+                        <th className="text-left p-2 font-medium text-muted-foreground">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reservedUnits.map((u) => (
+                        <tr key={u.id} className="border-b border-border/50">
+                          <td className="p-2 font-mono text-xs">{u.code}</td>
+                          <td className="p-2">{u.country}</td>
+                          <td className="p-2">{u.design}</td>
+                          <td className="p-2">
+                            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-primary/15 text-primary">
+                              {u.fulfillment === 'reserved' ? 'Zarezerwowana' : u.fulfillment}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <p className="text-xs text-muted-foreground mt-2">Zarezerwowano {reservedUnits.length} sztuk</p>
+                </div>
+              )}
             </div>
           </>
         )}
