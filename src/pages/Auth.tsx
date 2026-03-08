@@ -64,11 +64,13 @@ const Auth = () => {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
 
         if (error) {
+          const description = error.message.includes("Invalid login credentials")
+              ? "Nieprawidłowy email lub hasło."
+              : "Wystąpił błąd podczas logowania. Spróbuj ponownie.";
+          console.error("Login error:", error.message);
           toast({
             title: "Błąd logowania",
-            description: error.message.includes("Invalid login credentials")
-              ? "Nieprawidłowy email lub hasło."
-              : error.message,
+            description,
             variant: "destructive",
           });
         } else {
@@ -87,11 +89,13 @@ const Auth = () => {
         });
 
         if (error) {
+          const description = error.message.includes("already registered")
+              ? "Ten email jest już zarejestrowany."
+              : "Wystąpił błąd podczas rejestracji. Spróbuj ponownie.";
+          console.error("Signup error:", error.message);
           toast({
             title: "Błąd rejestracji",
-            description: error.message.includes("already registered")
-              ? "Ten email jest już zarejestrowany."
-              : error.message,
+            description,
             variant: "destructive",
           });
         } else if (data.user) {
