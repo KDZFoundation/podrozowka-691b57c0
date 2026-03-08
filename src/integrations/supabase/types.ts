@@ -88,6 +88,44 @@ export type Database = {
         }
         Relationships: []
       }
+      inventory_unit_events: {
+        Row: {
+          actor_id: string | null
+          actor_type: Database["public"]["Enums"]["event_actor_type"]
+          created_at: string
+          event_type: Database["public"]["Enums"]["inventory_event_type"]
+          id: string
+          inventory_unit_id: string
+          payload_json: Json | null
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_type?: Database["public"]["Enums"]["event_actor_type"]
+          created_at?: string
+          event_type: Database["public"]["Enums"]["inventory_event_type"]
+          id?: string
+          inventory_unit_id: string
+          payload_json?: Json | null
+        }
+        Update: {
+          actor_id?: string | null
+          actor_type?: Database["public"]["Enums"]["event_actor_type"]
+          created_at?: string
+          event_type?: Database["public"]["Enums"]["inventory_event_type"]
+          id?: string
+          inventory_unit_id?: string
+          payload_json?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_unit_events_inventory_unit_id_fkey"
+            columns: ["inventory_unit_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_units: {
         Row: {
           business_status: Database["public"]["Enums"]["business_status"] | null
@@ -681,12 +719,22 @@ export type Database = {
     Enums: {
       app_role: "traveler" | "admin"
       business_status: "purchased" | "registered"
+      event_actor_type: "system" | "admin" | "traveler" | "recipient"
       fulfillment_status:
         | "in_stock"
         | "reserved"
         | "qr_generated"
         | "qr_applied"
         | "shipped"
+        | "voided"
+        | "damaged"
+      inventory_event_type:
+        | "created_in_stock"
+        | "reserved_for_order"
+        | "qr_generated"
+        | "qr_applied"
+        | "shipped"
+        | "registered"
         | "voided"
         | "damaged"
       order_status: "pending" | "paid" | "fulfilled" | "cancelled"
@@ -832,12 +880,23 @@ export const Constants = {
     Enums: {
       app_role: ["traveler", "admin"],
       business_status: ["purchased", "registered"],
+      event_actor_type: ["system", "admin", "traveler", "recipient"],
       fulfillment_status: [
         "in_stock",
         "reserved",
         "qr_generated",
         "qr_applied",
         "shipped",
+        "voided",
+        "damaged",
+      ],
+      inventory_event_type: [
+        "created_in_stock",
+        "reserved_for_order",
+        "qr_generated",
+        "qr_applied",
+        "shipped",
+        "registered",
         "voided",
         "damaged",
       ],
