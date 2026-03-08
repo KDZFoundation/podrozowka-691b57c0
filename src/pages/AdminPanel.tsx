@@ -11,6 +11,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import AdminCountries from "@/components/admin/AdminCountries";
 import AdminCardDesigns from "@/components/admin/AdminCardDesigns";
+import AdminInventory from "@/components/admin/AdminInventory";
+
 
 interface PostcardRow {
   id: string;
@@ -40,7 +42,7 @@ const AdminPanel = () => {
   const { user, isLoading: authLoading, isAdmin } = useAuth();
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'postcards' | 'registrations' | 'countries' | 'card-designs'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'postcards' | 'registrations' | 'countries' | 'card-designs' | 'inventory'>('overview');
   const [stats, setStats] = useState<AdminStats>({ total: 0, available: 0, purchased: 0, registered: 0, countries: 0, designs: 0 });
   const [postcards, setPostcards] = useState<PostcardRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -168,7 +170,8 @@ const AdminPanel = () => {
 
   const tabs = [
     { id: 'overview', label: 'Przegląd', icon: BarChart3 },
-    { id: 'postcards', label: 'Magazyn kartek', icon: Package },
+    { id: 'inventory', label: 'Magazyn fizyczny', icon: Box },
+    { id: 'postcards', label: 'Kartki (legacy)', icon: Package },
     { id: 'registrations', label: 'Rejestracje QR', icon: QrCode },
     { id: 'countries', label: 'Kraje', icon: Globe2 },
     { id: 'card-designs', label: 'Wzory kartek', icon: Image },
@@ -292,6 +295,7 @@ const AdminPanel = () => {
 
         {activeTab === 'countries' && <AdminCountries />}
         {activeTab === 'card-designs' && <AdminCardDesigns />}
+        {activeTab === 'inventory' && <AdminInventory />}
       </main>
     </div>
   );
