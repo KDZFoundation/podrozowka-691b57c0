@@ -48,8 +48,10 @@ const CommunityGallery = () => {
         ? await supabase.from('profiles').select('user_id, display_name').in('user_id', travelerIds)
         : { data: [] };
 
-      const regMap = new Map(regs?.map(r => [r.inventory_unit_id, r]) || []);
-      const profileMap = new Map(profiles?.map(p => [p.user_id, p.display_name]) || []);
+      const regMap = new Map<string, { recipient_name: string; recipient_message: string | null }>();
+      regs?.forEach(r => regMap.set(r.inventory_unit_id, r));
+      const profileMap = new Map<string, string | null>();
+      profiles?.forEach(p => profileMap.set(p.user_id, p.display_name));
 
       const enriched: RegisteredPostcard[] = units.map((u: any) => {
         const reg = regMap.get(u.id);
