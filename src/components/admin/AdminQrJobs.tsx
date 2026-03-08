@@ -248,11 +248,21 @@ const AdminQrJobs = () => {
         <div className="bg-card rounded-xl p-6 shadow-soft space-y-4">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <h3 className="font-display text-xl font-bold">{selectedJob.name}</h3>
-            <div className="flex gap-2 items-center">
+            <div className="flex gap-2 items-center flex-wrap">
               {statusBadge(selectedJob.status)}
+              {(selectedJob.status === "ready" || selectedJob.status === "printed") && (
+                <Button size="sm" variant="outline" onClick={() => downloadPdf(selectedJob.id, selectedJob.name)} disabled={pdfLoading} className="gap-2">
+                  {pdfLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} Pobierz PDF
+                </Button>
+              )}
               {selectedJob.status === "ready" && (
                 <Button size="sm" variant="outline" onClick={() => markAsPrinted(selectedJob.id)} className="gap-2">
-                  <Printer className="w-4 h-4" /> Oznacz jako wydrukowane
+                  <Printer className="w-4 h-4" /> Wydrukowane
+                </Button>
+              )}
+              {(selectedJob.status === "ready" || selectedJob.status === "printed") && (
+                <Button size="sm" variant="outline" onClick={() => markAsApplied(selectedJob.id)} className="gap-2">
+                  <CheckCheck className="w-4 h-4" /> Naklejone (applied)
                 </Button>
               )}
             </div>
