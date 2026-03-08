@@ -81,6 +81,10 @@ const AdminOrders = () => {
   const [page, setPage] = useState(0);
   const [selectedOrder, setSelectedOrder] = useState<OrderDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [reserving, setReserving] = useState(false);
+  const [reservedUnits, setReservedUnits] = useState<any[]>([]);
+  const [reserveError, setReserveError] = useState<string | null>(null);
+  const [shortages, setShortages] = useState<any[]>([]);
 
   useEffect(() => {
     fetchOrders();
