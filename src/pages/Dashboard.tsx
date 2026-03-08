@@ -114,7 +114,13 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 space-y-6">
+        <RankCard
+          totalPoints={profile?.total_points ?? 0}
+          currentRank={profile?.current_rank ?? 'Zwiadowca'}
+          uniqueCountries={0}
+          registeredRelations={0}
+        />
         {activeTab === 'overview' && <UserStats profile={profile} userId={user.id} />}
         {activeTab === 'my-orders' && <MyOrders userId={user.id} />}
         {activeTab === 'my-shipments' && <MyShipments userId={user.id} />}
