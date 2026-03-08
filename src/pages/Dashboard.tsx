@@ -63,6 +63,7 @@ const Dashboard = () => {
 
   const tabs = [
     { id: 'overview', label: 'Przegląd', icon: User },
+    { id: 'my-orders', label: 'Moje zamówienia', icon: ShoppingCart },
     { id: 'my-postcards', label: 'Moje Podróżówki', icon: Package },
   ];
 
