@@ -96,13 +96,13 @@ const DistributionMap = () => {
       // Fetch registered postcards with their country via designs → countries join
       const { data, error } = await supabase
         .from('postcards')
-        .select('designs!inner(countries!inner(name))')
+        .select('card_designs!inner(countries!inner(name_pl))')
         .eq('status', 'registered');
 
       if (!error && data) {
         const countMap: Record<string, number> = {};
         data.forEach((item: any) => {
-          const country = item.designs?.countries?.name;
+          const country = item.card_designs?.countries?.name_pl;
           if (country) {
             countMap[country] = (countMap[country] || 0) + 1;
           }

@@ -36,14 +36,14 @@ const UserStats = ({ profile, userId }: UserStatsProps) => {
     const fetchStats = async () => {
       const { data, error } = await supabase
         .from('postcards')
-        .select('id, status, designs!inner(countries!inner(name))')
+        .select('id, status, card_designs!inner(countries!inner(name_pl))')
         .eq('buyer_id', userId);
 
       if (!error && data) {
         const total = data.length;
         const purchased = data.filter((p: any) => p.status === 'purchased').length;
         const registered = data.filter((p: any) => p.status === 'registered').length;
-        const countries = [...new Set(data.map((p: any) => p.designs?.countries?.name).filter(Boolean))];
+        const countries = [...new Set(data.map((p: any) => p.card_designs?.countries?.name_pl).filter(Boolean))];
 
         setStats({ total, purchased, registered, countriesReached: countries.length });
         setRecentCountries(countries.slice(0, 5) as string[]);
