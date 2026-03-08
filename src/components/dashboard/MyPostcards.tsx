@@ -38,7 +38,7 @@ const MyPostcards = ({ userId }: MyPostcardsProps) => {
         .select(`
           id, status, buyer_display_name, purchased_at,
           recipient_name, recipient_message, registered_at,
-          designs!inner(view_name, countries!inner(name, flag))
+          card_designs!inner(title, countries!inner(name_pl, iso2))
         `)
         .eq('buyer_id', userId)
         .order('purchased_at', { ascending: false });
@@ -52,9 +52,9 @@ const MyPostcards = ({ userId }: MyPostcardsProps) => {
           recipient_name: p.recipient_name,
           recipient_message: p.recipient_message,
           registered_at: p.registered_at,
-          country_name: p.designs?.countries?.name || null,
-          country_flag: p.designs?.countries?.flag || null,
-          design_view_name: p.designs?.view_name || null,
+          country_name: p.card_designs?.countries?.name_pl || null,
+          country_flag: null,
+          design_view_name: p.card_designs?.title || null,
         }));
         setPostcards(mapped);
       }

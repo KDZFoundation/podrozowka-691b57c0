@@ -123,9 +123,9 @@ const AdminPanel = () => {
         recipient_name: p.recipient_name,
         registered_at: p.registered_at,
         order_reference: p.order_reference,
-        design_view_name: p.designs?.view_name,
-        country_name: p.designs?.countries?.name,
-        country_flag: p.designs?.countries?.flag,
+        design_view_name: p.card_designs?.title,
+        country_name: p.card_designs?.countries?.name_pl,
+        country_flag: null,
       })));
     }
   };
