@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Package, Globe2, Users, QrCode, BarChart3, ArrowLeft,
-  Loader2, Search, Filter, CheckCircle, ShoppingBag, Box, Image
+  Loader2, Search, Filter, CheckCircle, ShoppingBag, Box, Image, ShoppingCart
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
