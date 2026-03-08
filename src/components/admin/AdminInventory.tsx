@@ -327,6 +327,83 @@ const AdminInventory = () => {
     );
   };
 
+  // Unit detail view
+  if (selectedUnit) {
+    const formatDateFull = (d: string) =>
+      new Date(d).toLocaleDateString("pl-PL", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+
+    return (
+      <div className="space-y-6">
+        <button onClick={() => setSelectedUnit(null)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="w-4 h-4" /> Wróć do listy
+        </button>
+
+        <div className="bg-card rounded-xl p-6 shadow-soft space-y-4">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <h3 className="font-display text-xl font-bold font-mono">{selectedUnit.internal_inventory_code}</h3>
+            <div className="flex gap-2">
+              {fulfillmentBadge(selectedUnit.fulfillment_status)}
+              {businessBadge(selectedUnit.business_status)}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div><span className="text-muted-foreground">Kraj:</span><p>{selectedUnit.country_name || "—"}</p></div>
+            <div><span className="text-muted-foreground">Wzór:</span><p>V{selectedUnit.view_no} {selectedUnit.design_title || ""}</p></div>
+            <div><span className="text-muted-foreground">Claim code:</span><p className="font-mono text-xs">{selectedUnit.public_claim_code || "—"}</p></div>
+            <div><span className="text-muted-foreground">Zamówienie:</span><p className="font-mono text-xs">{selectedUnit.order_id || "—"}</p></div>
+          </div>
+          {selectedUnit.fulfillment_status !== 'voided' && selectedUnit.fulfillment_status !== 'damaged' && (
+            <div className="flex gap-2 border-t border-border pt-4">
+              <Button variant="destructive" size="sm" onClick={() => { handleVoid(selectedUnit.id); setSelectedUnit(null); }}>Unieważnij</Button>
+              <Button variant="destructive" size="sm" onClick={() => { handleDamaged(selectedUnit.id); setSelectedUnit(null); }}>Uszkodzona</Button>
+            </div>
+          )}
+        </div>
+
+        {/* Event timeline */}
+        <div className="bg-card rounded-xl p-6 shadow-soft">
+          <h4 className="font-display font-semibold mb-4 flex items-center gap-2">
+            <Clock className="w-4 h-4 text-primary" /> Historia zdarzeń
+          </h4>
+          {eventsLoading ? (
+            <div className="flex justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>
+          ) : unitEvents.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Brak zarejestrowanych zdarzeń</p>
+          ) : (
+            <div className="relative">
+              <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
+              <div className="space-y-4">
+                {unitEvents.map((ev, i) => (
+                  <div key={ev.id} className="relative pl-10">
+                    <div className="absolute left-2.5 top-1 w-3 h-3 rounded-full bg-primary border-2 border-background" />
+                    <div className="bg-muted/50 rounded-lg p-3">
+                      <div className="flex items-center justify-between flex-wrap gap-2 mb-1">
+                        <span className="text-sm font-medium text-foreground">
+                          {EVENT_TYPE_LABELS[ev.event_type] || ev.event_type}
+                        </span>
+                        <span className="text-xs text-muted-foreground">{formatDateFull(ev.created_at)}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span className="px-1.5 py-0.5 bg-background rounded text-[10px] font-medium">
+                          {ACTOR_TYPE_LABELS[ev.actor_type] || ev.actor_type}
+                        </span>
+                        {ev.payload_json && Object.keys(ev.payload_json).length > 0 && (
+                          <span className="font-mono text-[10px] text-muted-foreground/70 truncate max-w-[300px]">
+                            {JSON.stringify(ev.payload_json)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-3 items-center justify-between">
