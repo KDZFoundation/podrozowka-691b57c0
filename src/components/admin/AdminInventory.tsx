@@ -365,7 +365,7 @@ const AdminInventory = () => {
             </thead>
             <tbody>
               {isLoading ? (
-                <tr><td colSpan={10} className="p-8 text-center"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" /></td></tr>
+                <tr><td colSpan={11} className="p-8 text-center"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" /></td></tr>
               ) : filteredUnits.length === 0 ? (
                 <tr><td colSpan={11} className="p-8 text-center text-muted-foreground">Brak wyników</td></tr>
               ) : (
