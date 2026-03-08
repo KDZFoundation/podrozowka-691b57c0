@@ -508,7 +508,7 @@ const AdminInventory = () => {
                 <tr><td colSpan={11} className="p-8 text-center text-muted-foreground">Brak wyników</td></tr>
               ) : (
                 filteredUnits.map((u) => (
-                  <tr key={u.id} className="border-b border-border/50 hover:bg-muted/30">
+                  <tr key={u.id} className="border-b border-border/50 hover:bg-muted/30 cursor-pointer" onClick={() => openUnitDetail(u)}>
                     <td className="p-3 font-mono text-xs">{u.internal_inventory_code}</td>
                     <td className="p-3">{u.country_name || "—"}</td>
                     <td className="p-3 text-muted-foreground">V{u.view_no} {u.design_title || ""}</td>
