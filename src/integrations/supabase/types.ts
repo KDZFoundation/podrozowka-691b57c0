@@ -88,6 +88,88 @@ export type Database = {
         }
         Relationships: []
       }
+      inventory_units: {
+        Row: {
+          business_status: Database["public"]["Enums"]["business_status"] | null
+          card_design_id: string
+          created_at: string
+          fulfillment_status: Database["public"]["Enums"]["fulfillment_status"]
+          id: string
+          internal_inventory_code: string
+          order_id: string | null
+          order_item_id: string | null
+          public_claim_code: string | null
+          public_claim_token_hash: string | null
+          qr_applied_at: string | null
+          qr_generated_at: string | null
+          registered_at: string | null
+          shipment_id: string | null
+          shipped_at: string | null
+          stock_batch_id: string
+          traveler_user_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          business_status?:
+            | Database["public"]["Enums"]["business_status"]
+            | null
+          card_design_id: string
+          created_at?: string
+          fulfillment_status?: Database["public"]["Enums"]["fulfillment_status"]
+          id?: string
+          internal_inventory_code: string
+          order_id?: string | null
+          order_item_id?: string | null
+          public_claim_code?: string | null
+          public_claim_token_hash?: string | null
+          qr_applied_at?: string | null
+          qr_generated_at?: string | null
+          registered_at?: string | null
+          shipment_id?: string | null
+          shipped_at?: string | null
+          stock_batch_id: string
+          traveler_user_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          business_status?:
+            | Database["public"]["Enums"]["business_status"]
+            | null
+          card_design_id?: string
+          created_at?: string
+          fulfillment_status?: Database["public"]["Enums"]["fulfillment_status"]
+          id?: string
+          internal_inventory_code?: string
+          order_id?: string | null
+          order_item_id?: string | null
+          public_claim_code?: string | null
+          public_claim_token_hash?: string | null
+          qr_applied_at?: string | null
+          qr_generated_at?: string | null
+          registered_at?: string | null
+          shipment_id?: string | null
+          shipped_at?: string | null
+          stock_batch_id?: string
+          traveler_user_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_units_card_design_id_fkey"
+            columns: ["card_design_id"]
+            isOneToOne: false
+            referencedRelation: "card_designs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_units_stock_batch_id_fkey"
+            columns: ["stock_batch_id"]
+            isOneToOne: false
+            referencedRelation: "stock_batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_stats: {
         Row: {
           id: string
@@ -228,6 +310,44 @@ export type Database = {
         }
         Relationships: []
       }
+      stock_batches: {
+        Row: {
+          card_design_id: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          quantity: number
+          updated_at: string
+        }
+        Insert: {
+          card_design_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          quantity?: number
+          updated_at?: string
+        }
+        Update: {
+          card_design_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          quantity?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_batches_card_design_id_fkey"
+            columns: ["card_design_id"]
+            isOneToOne: false
+            referencedRelation: "card_designs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -263,6 +383,15 @@ export type Database = {
     }
     Enums: {
       app_role: "traveler" | "admin"
+      business_status: "purchased" | "registered"
+      fulfillment_status:
+        | "in_stock"
+        | "reserved"
+        | "qr_generated"
+        | "qr_applied"
+        | "shipped"
+        | "voided"
+        | "damaged"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -391,6 +520,16 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["traveler", "admin"],
+      business_status: ["purchased", "registered"],
+      fulfillment_status: [
+        "in_stock",
+        "reserved",
+        "qr_generated",
+        "qr_applied",
+        "shipped",
+        "voided",
+        "damaged",
+      ],
     },
   },
 } as const
