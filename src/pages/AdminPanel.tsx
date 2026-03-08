@@ -34,6 +34,7 @@ import AdminGlobalMap from "@/components/admin/AdminGlobalMap";
 
 type TabId =
   | "overview"
+  | "map"
   | "countries"
   | "card-designs"
   | "inventory"
