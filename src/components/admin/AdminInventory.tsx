@@ -99,6 +99,23 @@ const AdminInventory = () => {
   const [initBatchName, setInitBatchName] = useState("");
   const [isInitializing, setIsInitializing] = useState(false);
 
+  // Detail view
+  const [selectedUnit, setSelectedUnit] = useState<InventoryUnit | null>(null);
+  const [unitEvents, setUnitEvents] = useState<any[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(false);
+
+  const openUnitDetail = async (unit: InventoryUnit) => {
+    setSelectedUnit(unit);
+    setEventsLoading(true);
+    const { data } = await supabase
+      .from("inventory_unit_events")
+      .select("id, event_type, actor_type, actor_id, payload_json, created_at")
+      .eq("inventory_unit_id", unit.id)
+      .order("created_at", { ascending: true });
+    setUnitEvents(data || []);
+    setEventsLoading(false);
+  };
+
   useEffect(() => {
     fetchFilters();
   }, []);
