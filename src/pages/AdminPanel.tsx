@@ -303,6 +303,7 @@ const AdminPanel = () => {
         {activeTab === 'inventory' && <AdminInventory />}
         {activeTab === 'orders' && <AdminOrders />}
         {activeTab === 'qr-jobs' && <AdminQrJobs />}
+        {activeTab === 'shipments' && <AdminShipments />}
       </main>
     </div>
   );
