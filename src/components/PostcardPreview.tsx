@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { RotateCcw } from "lucide-react";
 import krakowImage from "@/assets/krakow-square.jpg";
+import projektTylImage from "@/assets/projekt-tyl.jpg";
 
 const PostcardPreview = () => {
   const [isFlipped, setIsFlipped] = useState(false);
