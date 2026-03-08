@@ -1,42 +1,49 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle, Loader2, User, MessageSquare, Mail } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import type { PostcardInfo } from "@/pages/RegisterPostcard";
 
+const formSchema = z.object({
+  recipientName: z.string().min(1, "Podaj swoje imię").max(100, "Maksymalnie 100 znaków"),
+  recipientMessage: z.string().max(500, "Maksymalnie 500 znaków").default(""),
+  recipientEmail: z.union([z.literal(""), z.string().email("Podaj prawidłowy adres email")]).default(""),
+  contactOptIn: z.boolean().default(false),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
 interface Props {
   postcard: PostcardInfo;
-  onSubmit: (data: {
-    recipientName: string;
-    recipientMessage: string;
-    recipientEmail: string;
-    contactOptIn: boolean;
-  }) => Promise<void>;
+  onSubmit: (data: FormValues) => Promise<void>;
 }
 
 const RegisterPostcardForm = ({ postcard, onSubmit }: Props) => {
   const { toast } = useToast();
-  const [recipientName, setRecipientName] = useState("");
-  const [recipientMessage, setRecipientMessage] = useState("");
-  const [recipientEmail, setRecipientEmail] = useState("");
-  const [contactOptIn, setContactOptIn] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      recipientName: "",
+      recipientMessage: "",
+      recipientEmail: "",
+      contactOptIn: false,
+    },
+  });
 
-    if (!recipientName.trim()) {
-      toast({ title: "Podaj swoje imię", variant: "destructive" });
-      return;
-    }
-
+  const handleSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
     try {
-      await onSubmit({ recipientName, recipientMessage, recipientEmail, contactOptIn });
+      await onSubmit(values);
     } catch (err) {
       toast({
         title: "Wystąpił błąd",
@@ -47,6 +54,8 @@ const RegisterPostcardForm = ({ postcard, onSubmit }: Props) => {
       setIsSubmitting(false);
     }
   };
+
+  const messageValue = form.watch("recipientMessage");
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -65,79 +74,84 @@ const RegisterPostcardForm = ({ postcard, onSubmit }: Props) => {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">
-                Twoje imię *
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="Jak masz na imię?"
-                  value={recipientName}
-                  onChange={(e) => setRecipientName(e.target.value)}
-                  className="pl-10"
-                  maxLength={100}
-                  required
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">
-                Krótka wiadomość (opcjonalne)
-              </label>
-              <div className="relative">
-                <MessageSquare className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
-                <Textarea
-                  placeholder="Napisz coś do Podróżnika..."
-                  value={recipientMessage}
-                  onChange={(e) => setRecipientMessage(e.target.value)}
-                  className="pl-10"
-                  rows={3}
-                  maxLength={500}
-                />
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">{recipientMessage.length}/500</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">
-                Email (opcjonalnie)
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  type="email"
-                  placeholder="twoj@email.com"
-                  value={recipientEmail}
-                  onChange={(e) => setRecipientEmail(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-start space-x-3">
-              <Checkbox
-                id="contact-opt-in"
-                checked={contactOptIn}
-                onCheckedChange={(checked) => setContactOptIn(checked === true)}
-                className="mt-0.5"
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
+              <FormField
+                control={form.control}
+                name="recipientName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Twoje imię *</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                        <Input placeholder="Jak masz na imię?" className="pl-10" maxLength={100} {...field} />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              <label htmlFor="contact-opt-in" className="text-sm text-muted-foreground cursor-pointer">
-                Wyrażam zgodę na kontakt ze strony Podróżnika, który wysłał tę kartkę
-              </label>
-            </div>
 
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Rejestrowanie...</>
-              ) : (
-                <><CheckCircle className="w-4 h-4 mr-2" />Zarejestruj kartkę</>
-              )}
-            </Button>
-          </form>
+              <FormField
+                control={form.control}
+                name="recipientMessage"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Krótka wiadomość (opcjonalne)</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <MessageSquare className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
+                        <Textarea placeholder="Napisz coś do Podróżnika..." className="pl-10" rows={3} maxLength={500} {...field} />
+                      </div>
+                    </FormControl>
+                    <p className="text-xs text-muted-foreground">{messageValue.length}/500</p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="recipientEmail"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email (opcjonalnie)</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                        <Input type="email" placeholder="twoj@email.com" className="pl-10" {...field} />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="contactOptIn"
+                render={({ field }) => (
+                  <FormItem className="flex items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox checked={field.value} onCheckedChange={field.onChange} className="mt-0.5" />
+                    </FormControl>
+                    <FormLabel className="text-sm text-muted-foreground font-normal cursor-pointer">
+                      Wyrażam zgodę na kontakt ze strony Podróżnika, który wysłał tę kartkę
+                    </FormLabel>
+                  </FormItem>
+                )}
+              />
+
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Rejestrowanie...</>
+                ) : (
+                  <><CheckCircle className="w-4 h-4 mr-2" />Zarejestruj kartkę</>
+                )}
+              </Button>
+            </form>
+          </Form>
         </div>
 
         <p className="text-center text-xs text-muted-foreground mt-4">
