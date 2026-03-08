@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, QrCode, Printer, ArrowLeft, Eye, Plus } from "lucide-react";
+import { Loader2, QrCode, Printer, ArrowLeft, Eye, Plus, Download, CheckCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface PrintJob {
@@ -176,6 +176,59 @@ const AdminQrJobs = () => {
     }
   };
 
+  const markAsApplied = async (jobId: string) => {
+    // Update print job status
+    await supabase.from("qr_print_jobs").update({ status: "printed" as any }).eq("id", jobId);
+
+    // Update all inventory units in this job to qr_applied
+    const { data: jobItemsList } = await supabase
+      .from("qr_print_job_items")
+      .select("inventory_unit_id")
+      .eq("print_job_id", jobId);
+
+    if (jobItemsList) {
+      const unitIds = jobItemsList.map((i) => i.inventory_unit_id);
+      await supabase
+        .from("inventory_units")
+        .update({
+          fulfillment_status: "qr_applied" as any,
+          qr_applied_at: new Date().toISOString(),
+        })
+        .in("id", unitIds);
+    }
+
+    toast({ title: "Oznaczono jako naklejone (qr_applied)" });
+    fetchJobs();
+    if (selectedJob?.id === jobId) setSelectedJob({ ...selectedJob, status: "printed" });
+  };
+
+  const [pdfLoading, setPdfLoading] = useState(false);
+
+  const downloadPdf = async (jobId: string, jobName: string) => {
+    setPdfLoading(true);
+    const { data, error } = await supabase.functions.invoke("generate-qr-pdf", {
+      body: { print_job_id: jobId },
+    });
+
+    if (error || data?.error) {
+      toast({ title: "Błąd generowania PDF", description: error?.message || data?.error, variant: "destructive" });
+      setPdfLoading(false);
+      return;
+    }
+
+    if (data?.pdf) {
+      // data.pdf is a data URI string
+      const link = document.createElement("a");
+      link.href = data.pdf;
+      link.download = `QR-${jobName.replace(/\s+/g, "-")}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast({ title: "PDF pobrany" });
+    }
+    setPdfLoading(false);
+  };
+
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString("pl-PL", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 
@@ -195,11 +248,21 @@ const AdminQrJobs = () => {
         <div className="bg-card rounded-xl p-6 shadow-soft space-y-4">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <h3 className="font-display text-xl font-bold">{selectedJob.name}</h3>
-            <div className="flex gap-2 items-center">
+            <div className="flex gap-2 items-center flex-wrap">
               {statusBadge(selectedJob.status)}
+              {(selectedJob.status === "ready" || selectedJob.status === "printed") && (
+                <Button size="sm" variant="outline" onClick={() => downloadPdf(selectedJob.id, selectedJob.name)} disabled={pdfLoading} className="gap-2">
+                  {pdfLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} Pobierz PDF
+                </Button>
+              )}
               {selectedJob.status === "ready" && (
                 <Button size="sm" variant="outline" onClick={() => markAsPrinted(selectedJob.id)} className="gap-2">
-                  <Printer className="w-4 h-4" /> Oznacz jako wydrukowane
+                  <Printer className="w-4 h-4" /> Wydrukowane
+                </Button>
+              )}
+              {(selectedJob.status === "ready" || selectedJob.status === "printed") && (
+                <Button size="sm" variant="outline" onClick={() => markAsApplied(selectedJob.id)} className="gap-2">
+                  <CheckCheck className="w-4 h-4" /> Naklejone (applied)
                 </Button>
               )}
             </div>
