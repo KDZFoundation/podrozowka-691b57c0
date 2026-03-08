@@ -170,6 +170,114 @@ export type Database = {
           },
         ]
       }
+      order_items: {
+        Row: {
+          card_design_id: string
+          created_at: string
+          id: string
+          order_id: string
+          quantity: number
+          total_price: number
+          unit_price: number
+        }
+        Insert: {
+          card_design_id: string
+          created_at?: string
+          id?: string
+          order_id: string
+          quantity?: number
+          total_price?: number
+          unit_price?: number
+        }
+        Update: {
+          card_design_id?: string
+          created_at?: string
+          id?: string
+          order_id?: string
+          quantity?: number
+          total_price?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_card_design_id_fkey"
+            columns: ["card_design_id"]
+            isOneToOne: false
+            referencedRelation: "card_designs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          cancelled_at: string | null
+          created_at: string
+          currency: string
+          fulfilled_at: string | null
+          id: string
+          notes: string | null
+          order_number: string
+          paid_at: string | null
+          payment_status: Database["public"]["Enums"]["payment_status"]
+          shipping_address: string | null
+          shipping_city: string | null
+          shipping_country: string | null
+          shipping_name: string | null
+          shipping_postal_code: string | null
+          status: Database["public"]["Enums"]["order_status"]
+          total_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cancelled_at?: string | null
+          created_at?: string
+          currency?: string
+          fulfilled_at?: string | null
+          id?: string
+          notes?: string | null
+          order_number?: string
+          paid_at?: string | null
+          payment_status?: Database["public"]["Enums"]["payment_status"]
+          shipping_address?: string | null
+          shipping_city?: string | null
+          shipping_country?: string | null
+          shipping_name?: string | null
+          shipping_postal_code?: string | null
+          status?: Database["public"]["Enums"]["order_status"]
+          total_amount?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cancelled_at?: string | null
+          created_at?: string
+          currency?: string
+          fulfilled_at?: string | null
+          id?: string
+          notes?: string | null
+          order_number?: string
+          paid_at?: string | null
+          payment_status?: Database["public"]["Enums"]["payment_status"]
+          shipping_address?: string | null
+          shipping_city?: string | null
+          shipping_country?: string | null
+          shipping_name?: string | null
+          shipping_postal_code?: string | null
+          status?: Database["public"]["Enums"]["order_status"]
+          total_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       platform_stats: {
         Row: {
           id: string
@@ -371,6 +479,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_order_number: { Args: never; Returns: string }
       generate_tracking_code: { Args: never; Returns: string }
       has_role: {
         Args: {
@@ -392,6 +501,8 @@ export type Database = {
         | "shipped"
         | "voided"
         | "damaged"
+      order_status: "pending" | "paid" | "fulfilled" | "cancelled"
+      payment_status: "unpaid" | "paid" | "refunded" | "failed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -530,6 +641,8 @@ export const Constants = {
         "voided",
         "damaged",
       ],
+      order_status: ["pending", "paid", "fulfilled", "cancelled"],
+      payment_status: ["unpaid", "paid", "refunded", "failed"],
     },
   },
 } as const
