@@ -130,6 +130,7 @@ const AdminPanel = () => {
 
   const tabs: { id: TabId; label: string; icon: typeof Package }[] = [
     { id: "overview", label: "Przegląd", icon: BarChart3 },
+    { id: "map", label: "Mapa Globalna", icon: MapIcon },
     { id: "countries", label: "Kraje", icon: Globe2 },
     { id: "card-designs", label: "Wzory kartek", icon: Image },
     { id: "inventory", label: "Magazyn", icon: Box },
