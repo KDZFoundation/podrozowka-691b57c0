@@ -160,7 +160,11 @@ const DistributionMap = () => {
       maxZoom: 19,
     }).addTo(map);
 
-    const layer = L.layerGroup().addTo(map);
+    const layer = (L as any).markerClusterGroup({
+      maxClusterRadius: 40,
+      spiderfyOnMaxZoom: true,
+      showCoverageOnHover: false,
+    }).addTo(map);
 
     mapRef.current = map;
     markersLayerRef.current = layer;
