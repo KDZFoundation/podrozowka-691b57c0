@@ -219,6 +219,7 @@ export type Database = {
     }
     Functions: {
       generate_tracking_code: { Args: never; Returns: string }
+      update_country_count: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
