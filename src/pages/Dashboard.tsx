@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Package, ArrowLeft, Loader2, Shield } from "lucide-react";
+import { User, Package, ArrowLeft, Loader2, Shield, ShoppingCart } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import UserStats from "@/components/dashboard/UserStats";
 import MyPostcards from "@/components/dashboard/MyPostcards";
+import MyOrders from "@/components/dashboard/MyOrders";
 
 interface Profile {
   id: string;
