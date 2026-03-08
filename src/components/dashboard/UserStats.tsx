@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ShoppingBag, Package, Globe2, Trophy, MapPin } from "lucide-react";
+import { ShoppingBag, Package, Globe2, Trophy, MapPin, Percent } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Profile {
@@ -20,33 +20,51 @@ interface UserStatsProps {
   userId: string;
 }
 
-interface PostcardStats {
+interface CountryStat {
+  name: string;
   total: number;
-  purchased: number;
   registered: number;
-  countriesReached: number;
 }
 
 const UserStats = ({ profile, userId }: UserStatsProps) => {
-  const [stats, setStats] = useState<PostcardStats>({ total: 0, purchased: 0, registered: 0, countriesReached: 0 });
-  const [recentCountries, setRecentCountries] = useState<string[]>([]);
+  const [totalUnits, setTotalUnits] = useState(0);
+  const [purchasedCount, setPurchasedCount] = useState(0);
+  const [registeredCount, setRegisteredCount] = useState(0);
+  const [countryStats, setCountryStats] = useState<CountryStat[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
       const { data, error } = await supabase
-        .from('postcards')
-        .select('id, status, card_designs!inner(countries!inner(name_pl))')
-        .eq('buyer_id', userId);
+        .from('inventory_units')
+        .select('id, business_status, card_designs!inner(countries!inner(name_pl))')
+        .eq('traveler_user_id', userId);
 
       if (!error && data) {
         const total = data.length;
-        const purchased = data.filter((p: any) => p.status === 'purchased').length;
-        const registered = data.filter((p: any) => p.status === 'registered').length;
-        const countries = [...new Set(data.map((p: any) => p.card_designs?.countries?.name_pl).filter(Boolean))];
+        const purchased = data.filter((u: any) => u.business_status === 'purchased').length;
+        const registered = data.filter((u: any) => u.business_status === 'registered').length;
 
-        setStats({ total, purchased, registered, countriesReached: countries.length });
-        setRecentCountries(countries.slice(0, 5) as string[]);
+        setTotalUnits(total);
+        setPurchasedCount(purchased);
+        setRegisteredCount(registered);
+
+        // Per-country stats
+        const countryMap = new Map<string, { total: number; registered: number }>();
+        data.forEach((u: any) => {
+          const name = u.card_designs?.countries?.name_pl;
+          if (!name) return;
+          const existing = countryMap.get(name) || { total: 0, registered: 0 };
+          existing.total++;
+          if (u.business_status === 'registered') existing.registered++;
+          countryMap.set(name, existing);
+        });
+
+        setCountryStats(
+          Array.from(countryMap.entries())
+            .map(([name, s]) => ({ name, ...s }))
+            .sort((a, b) => b.total - a.total)
+        );
       }
       setIsLoading(false);
     };
@@ -54,15 +72,18 @@ const UserStats = ({ profile, userId }: UserStatsProps) => {
     fetchStats();
   }, [userId]);
 
+  const regPercent = totalUnits > 0 ? Math.round((registeredCount / totalUnits) * 100) : 0;
+
   const statsCards = [
-    { icon: Package, value: stats.total, label: "Wszystkie Podróżówki", color: "text-primary", bgColor: "bg-primary/10" },
-    { icon: ShoppingBag, value: stats.purchased, label: "Zakupione", color: "text-[hsl(var(--gold))]", bgColor: "bg-[hsl(var(--gold))]/10" },
-    { icon: Trophy, value: stats.registered, label: "Zarejestrowane", color: "text-accent", bgColor: "bg-accent/10" },
-    { icon: Globe2, value: stats.countriesReached, label: "Krajów", color: "text-primary", bgColor: "bg-primary/10" },
+    { icon: Package, value: totalUnits, label: "Wszystkie kartki", color: "text-primary", bgColor: "bg-primary/10" },
+    { icon: ShoppingBag, value: purchasedCount, label: "Kupione (aktywne)", color: "text-[hsl(var(--gold))]", bgColor: "bg-[hsl(var(--gold))]/10" },
+    { icon: Trophy, value: registeredCount, label: "Zarejestrowane", color: "text-accent", bgColor: "bg-accent/10" },
+    { icon: Percent, value: `${regPercent}%`, label: "Rejestracji", color: "text-primary", bgColor: "bg-primary/10" },
   ];
 
   return (
     <div className="space-y-8">
+      {/* Welcome card */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-card rounded-2xl p-6 md:p-8 shadow-soft">
         <div className="flex items-start gap-4">
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -70,7 +91,7 @@ const UserStats = ({ profile, userId }: UserStatsProps) => {
           </div>
           <div>
             <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-1">Witaj, {profile?.display_name || "Podróżniku"}!</h1>
-            <p className="text-muted-foreground">{profile?.postcards_purchased || 0} zakupionych • {profile?.postcards_received || 0} otrzymanych</p>
+            <p className="text-muted-foreground">{totalUnits} kartek • {registeredCount} zarejestrowanych</p>
             {profile?.city && profile?.country && (
               <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1"><MapPin className="w-3 h-3" />{profile.city}, {profile.country}</p>
             )}
@@ -78,6 +99,7 @@ const UserStats = ({ profile, userId }: UserStatsProps) => {
         </div>
       </motion.div>
 
+      {/* Stat cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {statsCards.map((stat, index) => (
           <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }} className="bg-card rounded-xl p-5 shadow-soft">
@@ -90,17 +112,28 @@ const UserStats = ({ profile, userId }: UserStatsProps) => {
         ))}
       </div>
 
-      {recentCountries.length > 0 && (
+      {/* Per-country stats */}
+      {countryStats.length > 0 && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="bg-card rounded-xl p-6 shadow-soft">
           <h3 className="font-display text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-[hsl(var(--gold))]" /> Kraje Twoich Podróżówek
+            <Globe2 className="w-5 h-5 text-primary" /> Statystyki per kraj
           </h3>
-          <div className="flex flex-wrap gap-2">
-            {recentCountries.map((country) => (
-              <span key={country} className="inline-flex items-center gap-1 px-3 py-1.5 bg-secondary rounded-full text-sm font-medium text-foreground">
-                <MapPin className="w-3 h-3 text-accent" />{country}
-              </span>
-            ))}
+          <div className="space-y-3">
+            {countryStats.map((cs) => {
+              const pct = cs.total > 0 ? Math.round((cs.registered / cs.total) * 100) : 0;
+              return (
+                <div key={cs.name} className="flex items-center gap-3">
+                  <MapPin className="w-4 h-4 text-accent flex-shrink-0" />
+                  <span className="text-sm font-medium text-foreground min-w-[120px]">{cs.name}</span>
+                  <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                    <div className="h-full bg-accent rounded-full transition-all" style={{ width: `${pct}%` }} />
+                  </div>
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    {cs.registered}/{cs.total} ({pct}%)
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </motion.div>
       )}
