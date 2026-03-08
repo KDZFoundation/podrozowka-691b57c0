@@ -89,11 +89,13 @@ const Auth = () => {
         });
 
         if (error) {
+          const description = error.message.includes("already registered")
+              ? "Ten email jest już zarejestrowany."
+              : "Wystąpił błąd podczas rejestracji. Spróbuj ponownie.";
+          console.error("Signup error:", error.message);
           toast({
             title: "Błąd rejestracji",
-            description: error.message.includes("already registered")
-              ? "Ten email jest już zarejestrowany."
-              : error.message,
+            description,
             variant: "destructive",
           });
         } else if (data.user) {
