@@ -12,11 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminCountries from "@/components/admin/AdminCountries";
 import AdminCardDesigns from "@/components/admin/AdminCardDesigns";
 import AdminInventory from "@/components/admin/AdminInventory";
-import { Input } from "@/components/ui/input";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
-import AdminCountries from "@/components/admin/AdminCountries";
-import AdminCardDesigns from "@/components/admin/AdminCardDesigns";
+
 
 interface PostcardRow {
   id: string;
