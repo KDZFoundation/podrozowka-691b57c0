@@ -70,17 +70,20 @@ const Header = () => {
               </select>
             </div>
 
-            {/* Dashboard button for logged in users */}
+            {/* Notifications + Dashboard for logged in users */}
             {!isLoading && user && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="hidden md:flex"
-                onClick={() => navigate("/dashboard")}
-              >
-                <LayoutDashboard className="w-4 h-4 mr-2" />
-                Mój Panel
-              </Button>
+              <>
+                <NotificationsBell />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="hidden md:flex"
+                  onClick={() => navigate("/dashboard")}
+                >
+                  <LayoutDashboard className="w-4 h-4 mr-2" />
+                  Mój Panel
+                </Button>
+              </>
             )}
 
             {/* Auth button */}
