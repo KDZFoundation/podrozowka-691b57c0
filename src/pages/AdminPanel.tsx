@@ -95,6 +95,7 @@ const AdminPanel = () => {
     { id: 'qr-jobs', label: 'Druk QR', icon: QrCode },
     { id: 'registrations', label: 'Rejestracje', icon: UserCheck },
     { id: 'event-log', label: 'Log zdarzeń', icon: Clock },
+    { id: 'dev-tools', label: 'Narzędzia Dev', icon: Wrench },
   ];
 
   const overviewCards = [
