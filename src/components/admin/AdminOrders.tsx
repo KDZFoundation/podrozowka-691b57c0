@@ -145,7 +145,10 @@ const AdminOrders = () => {
           view_no: i.card_designs?.view_no,
         })),
       });
+      fetchReservedUnits(orderId);
     }
+    setReserveError(null);
+    setShortages([]);
     setDetailLoading(false);
   };
 
