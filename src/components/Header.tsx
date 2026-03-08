@@ -1,8 +1,19 @@
 import { useState } from "react";
-import { Menu, X, Globe, LogIn, LogOut, User, LayoutDashboard } from "lucide-react";
+import { Menu, X, Globe, LogIn, LayoutDashboard, Settings, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import NotificationsBell from "@/components/NotificationsBell";
 
 const languages = [
@@ -15,16 +26,38 @@ const languages = [
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentLang, setCurrentLang] = useState("pl");
-  const { user, signOut, isLoading } = useAuth();
+  const { user, signOut, isLoading, isAdmin } = useAuth();
   const navigate = useNavigate();
 
-  const handleAuthAction = () => {
-    if (user) {
-      signOut();
-    } else {
-      navigate("/auth");
-    }
+  const { data: profile } = useQuery({
+    queryKey: ["profile", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("display_name, first_name, last_name, avatar_url")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const getInitials = () => {
+    const first = profile?.first_name?.[0] ?? "";
+    const last = profile?.last_name?.[0] ?? "";
+    if (first || last) return `${first}${last}`.toUpperCase();
+    return (
+      profile?.display_name?.[0]?.toUpperCase() ??
+      user?.email?.[0]?.toUpperCase() ??
+      "?"
+    );
   };
+
+  const displayName =
+    profile?.display_name ??
+    ([profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || null) ??
+    user?.email ??
+    "";
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
@@ -55,9 +88,10 @@ const Header = () => {
 
           {/* Right side */}
           <div className="flex items-center gap-3">
+            {/* Language Selector */}
             <div className="hidden md:flex items-center gap-1 text-sm text-muted-foreground">
               <Globe className="w-4 h-4" />
-              <select 
+              <select
                 value={currentLang}
                 onChange={(e) => setCurrentLang(e.target.value)}
                 className="bg-transparent border-none text-sm focus:outline-none cursor-pointer"
@@ -70,42 +104,69 @@ const Header = () => {
               </select>
             </div>
 
-            {/* Notifications + Dashboard for logged in users */}
-            {!isLoading && user && (
+            {/* Logged-in user area */}
+            {!isLoading && user ? (
               <>
                 <NotificationsBell />
+
+                {/* User Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="hidden md:flex items-center gap-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                      <Avatar className="w-8 h-8 border border-border">
+                        <AvatarImage src={profile?.avatar_url ?? undefined} alt={displayName} />
+                        <AvatarFallback className="text-xs font-semibold bg-primary/10 text-primary">
+                          {getInitials()}
+                        </AvatarFallback>
+                      </Avatar>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-52">
+                    <DropdownMenuLabel className="font-normal">
+                      <p className="text-sm font-medium truncate">{displayName}</p>
+                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => navigate("/dashboard")}>
+                      <LayoutDashboard className="w-4 h-4 mr-2" />
+                      Mój Panel
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/settings")}>
+                      <Settings className="w-4 h-4 mr-2" />
+                      Ustawienia
+                    </DropdownMenuItem>
+                    {isAdmin && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => navigate("/admin")}>
+                          <Shield className="w-4 h-4 mr-2" />
+                          Panel Admina
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={signOut}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Wyloguj
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            ) : (
+              !isLoading && (
                 <Button
-                  variant="outline"
+                  variant="default"
                   size="sm"
                   className="hidden md:flex"
-                  onClick={() => navigate("/dashboard")}
+                  onClick={() => navigate("/auth")}
                 >
-                  <LayoutDashboard className="w-4 h-4 mr-2" />
-                  Mój Panel
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Zaloguj się
                 </Button>
-              </>
-            )}
-
-            {/* Auth button */}
-            {!isLoading && (
-              <Button
-                variant={user ? "ghost" : "default"}
-                size="sm"
-                className="hidden md:flex"
-                onClick={handleAuthAction}
-              >
-                {user ? (
-                  <>
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Wyloguj
-                  </>
-                ) : (
-                  <>
-                    <LogIn className="w-4 h-4 mr-2" />
-                    Zaloguj się
-                  </>
-                )}
-              </Button>
+              )
             )}
 
             {/* Mobile menu button */}
@@ -122,45 +183,56 @@ const Header = () => {
         {isMenuOpen && (
           <nav className="md:hidden py-4 border-t border-border animate-fade-in">
             <div className="flex flex-col gap-4">
+              {/* Mobile user info */}
+              {user && profile && (
+                <div className="flex items-center gap-3 pb-2">
+                  <Avatar className="w-10 h-10 border border-border">
+                    <AvatarImage src={profile.avatar_url ?? undefined} />
+                    <AvatarFallback className="text-sm font-semibold bg-primary/10 text-primary">
+                      {getInitials()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{displayName}</p>
+                    <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                  </div>
+                </div>
+              )}
+
               <a href="#about" className="text-foreground py-2 text-lg" onClick={() => setIsMenuOpen(false)}>O projekcie</a>
               <a href="#distribution-map" className="text-foreground py-2 text-lg" onClick={() => setIsMenuOpen(false)}>Mapa</a>
               <a href="#shop" className="text-foreground py-2 text-lg" onClick={() => setIsMenuOpen(false)}>Sklep</a>
               <a href="#community-gallery" className="text-foreground py-2 text-lg" onClick={() => setIsMenuOpen(false)}>Społeczność</a>
-              
+
               {user && (
-                <Button
-                  variant="outline"
-                  className="mt-2"
-                  onClick={() => {
-                    navigate("/dashboard");
-                    setIsMenuOpen(false);
-                  }}
-                >
-                  <LayoutDashboard className="w-4 h-4 mr-2" />
-                  Mój Panel
-                </Button>
-              )}
-              
-              <Button
-                variant={user ? "ghost" : "default"}
-                className="mt-2"
-                onClick={() => {
-                  handleAuthAction();
-                  setIsMenuOpen(false);
-                }}
-              >
-                {user ? (
-                  <>
+                <>
+                  <Button variant="outline" className="mt-2" onClick={() => { navigate("/dashboard"); setIsMenuOpen(false); }}>
+                    <LayoutDashboard className="w-4 h-4 mr-2" />
+                    Mój Panel
+                  </Button>
+                  <Button variant="outline" onClick={() => { navigate("/settings"); setIsMenuOpen(false); }}>
+                    <Settings className="w-4 h-4 mr-2" />
+                    Ustawienia
+                  </Button>
+                  {isAdmin && (
+                    <Button variant="outline" onClick={() => { navigate("/admin"); setIsMenuOpen(false); }}>
+                      <Shield className="w-4 h-4 mr-2" />
+                      Panel Admina
+                    </Button>
+                  )}
+                  <Button variant="ghost" className="text-destructive hover:text-destructive" onClick={() => { signOut(); setIsMenuOpen(false); }}>
                     <LogOut className="w-4 h-4 mr-2" />
                     Wyloguj
-                  </>
-                ) : (
-                  <>
-                    <LogIn className="w-4 h-4 mr-2" />
-                    Zaloguj się
-                  </>
-                )}
-              </Button>
+                  </Button>
+                </>
+              )}
+
+              {!user && !isLoading && (
+                <Button variant="default" className="mt-2" onClick={() => { navigate("/auth"); setIsMenuOpen(false); }}>
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Zaloguj się
+                </Button>
+              )}
             </div>
           </nav>
         )}
