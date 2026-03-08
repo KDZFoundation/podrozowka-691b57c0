@@ -233,6 +233,32 @@ const AdminInventory = () => {
     fetchUnits();
   };
 
+  const handleVoid = async (unitId: string) => {
+    const { error } = await supabase
+      .from("inventory_units")
+      .update({ fulfillment_status: "voided" as any })
+      .eq("id", unitId);
+    if (error) {
+      toast({ title: "Błąd", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Sztuka unieważniona" });
+      fetchUnits();
+    }
+  };
+
+  const handleDamaged = async (unitId: string) => {
+    const { error } = await supabase
+      .from("inventory_units")
+      .update({ fulfillment_status: "damaged" as any })
+      .eq("id", unitId);
+    if (error) {
+      toast({ title: "Błąd", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Sztuka oznaczona jako uszkodzona" });
+      fetchUnits();
+    }
+  };
+
   const formatDate = (d: string | null) =>
     d ? new Date(d).toLocaleDateString("pl-PL", { day: "numeric", month: "short", year: "numeric" }) : "—";
 
