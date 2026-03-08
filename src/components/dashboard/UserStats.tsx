@@ -108,6 +108,36 @@ const UserStats = ({ profile, userId }: UserStatsProps) => {
         </div>
       </motion.div>
 
+      {/* Gamification / Cultural Impact */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="bg-card rounded-2xl p-6 md:p-8 shadow-soft">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-display text-lg font-semibold text-foreground flex items-center gap-2">
+            <Award className={`w-5 h-5 ${rankInfo.color}`} /> Cultural Impact
+          </h3>
+          <span className={`text-xs font-semibold px-3 py-1 rounded-full ${rankInfo.bgColor} ${rankInfo.color}`}>
+            {currentRank}
+          </span>
+        </div>
+        <div className="flex items-end gap-3 mb-3">
+          <p className={`font-display text-4xl font-bold ${rankInfo.color}`}>{totalPoints}</p>
+          <p className="text-sm text-muted-foreground mb-1">punktów</p>
+        </div>
+        {rankInfo.next && (
+          <div>
+            <div className="flex justify-between text-xs text-muted-foreground mb-1">
+              <span>{currentRank}</span>
+              <span>{rankInfo.next} ({rankInfo.nextThreshold} pkt)</span>
+            </div>
+            <div className="h-2 bg-muted rounded-full overflow-hidden">
+              <div className={`h-full rounded-full transition-all bg-primary`} style={{ width: `${progressToNext}%` }} />
+            </div>
+          </div>
+        )}
+        {!rankInfo.next && (
+          <p className="text-sm text-muted-foreground flex items-center gap-1"><Star className="w-4 h-4 text-primary" /> Osiągnąłeś najwyższą rangę!</p>
+        )}
+      </motion.div>
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {statsCards.map((stat, index) => (
           <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }} className="bg-card rounded-xl p-5 shadow-soft">
