@@ -233,6 +233,32 @@ const AdminInventory = () => {
     fetchUnits();
   };
 
+  const handleVoid = async (unitId: string) => {
+    const { error } = await supabase
+      .from("inventory_units")
+      .update({ fulfillment_status: "voided" as any })
+      .eq("id", unitId);
+    if (error) {
+      toast({ title: "Błąd", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Sztuka unieważniona" });
+      fetchUnits();
+    }
+  };
+
+  const handleDamaged = async (unitId: string) => {
+    const { error } = await supabase
+      .from("inventory_units")
+      .update({ fulfillment_status: "damaged" as any })
+      .eq("id", unitId);
+    if (error) {
+      toast({ title: "Błąd", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Sztuka oznaczona jako uszkodzona" });
+      fetchUnits();
+    }
+  };
+
   const formatDate = (d: string | null) =>
     d ? new Date(d).toLocaleDateString("pl-PL", { day: "numeric", month: "short", year: "numeric" }) : "—";
 
@@ -360,13 +386,14 @@ const AdminInventory = () => {
                 <th className="text-left p-3 font-medium text-muted-foreground">QR gen.</th>
                 <th className="text-left p-3 font-medium text-muted-foreground">Wysłano</th>
                 <th className="text-left p-3 font-medium text-muted-foreground">Rejestracja</th>
+                <th className="text-left p-3 font-medium text-muted-foreground">Akcje</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
-                <tr><td colSpan={10} className="p-8 text-center"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" /></td></tr>
+                <tr><td colSpan={11} className="p-8 text-center"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" /></td></tr>
               ) : filteredUnits.length === 0 ? (
-                <tr><td colSpan={10} className="p-8 text-center text-muted-foreground">Brak wyników</td></tr>
+                <tr><td colSpan={11} className="p-8 text-center text-muted-foreground">Brak wyników</td></tr>
               ) : (
                 filteredUnits.map((u) => (
                   <tr key={u.id} className="border-b border-border/50 hover:bg-muted/30">
@@ -380,6 +407,22 @@ const AdminInventory = () => {
                     <td className="p-3 text-xs text-muted-foreground">{formatDate(u.qr_generated_at)}</td>
                     <td className="p-3 text-xs text-muted-foreground">{formatDate(u.shipped_at)}</td>
                     <td className="p-3 text-xs text-muted-foreground">{formatDate(u.registered_at)}</td>
+                    <td className="p-3">
+                      {u.fulfillment_status !== 'voided' && u.fulfillment_status !== 'damaged' && (
+                        <div className="flex gap-1">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleVoid(u.id); }}
+                            className="px-2 py-0.5 rounded text-xs font-medium bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
+                            title="Unieważnij"
+                          >Unieważnij</button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDamaged(u.id); }}
+                            className="px-2 py-0.5 rounded text-xs font-medium bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
+                            title="Uszkodzona"
+                          >Uszkodzona</button>
+                        </div>
+                      )}
+                    </td>
                   </tr>
                 ))
               )}
