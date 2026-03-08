@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { z } from "zod";
+import { lovable } from "@/integrations/lovable/index";
 
 const emailSchema = z.string().email("Podaj prawidłowy adres email");
 const passwordSchema = z.string().min(6, "Hasło musi mieć minimum 6 znaków");
