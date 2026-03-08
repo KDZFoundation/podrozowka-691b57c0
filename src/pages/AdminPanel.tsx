@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminCountries from "@/components/admin/AdminCountries";
 import AdminCardDesigns from "@/components/admin/AdminCardDesigns";
 import AdminInventory from "@/components/admin/AdminInventory";
+import AdminOrders from "@/components/admin/AdminOrders";
 
 
 interface PostcardRow {
