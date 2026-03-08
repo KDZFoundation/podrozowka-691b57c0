@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Package, Globe2, Users, QrCode, BarChart3, ArrowLeft,
-  Loader2, Search, Filter, CheckCircle, ShoppingBag, Box, Image
+  Loader2, Search, Filter, CheckCircle, ShoppingBag, Box, Image, ShoppingCart
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminCountries from "@/components/admin/AdminCountries";
 import AdminCardDesigns from "@/components/admin/AdminCardDesigns";
 import AdminInventory from "@/components/admin/AdminInventory";
+import AdminOrders from "@/components/admin/AdminOrders";
 
 
 interface PostcardRow {
@@ -42,7 +43,7 @@ const AdminPanel = () => {
   const { user, isLoading: authLoading, isAdmin } = useAuth();
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'postcards' | 'registrations' | 'countries' | 'card-designs' | 'inventory'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'postcards' | 'registrations' | 'countries' | 'card-designs' | 'inventory' | 'orders'>('overview');
   const [stats, setStats] = useState<AdminStats>({ total: 0, available: 0, purchased: 0, registered: 0, countries: 0, designs: 0 });
   const [postcards, setPostcards] = useState<PostcardRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -170,6 +171,7 @@ const AdminPanel = () => {
 
   const tabs = [
     { id: 'overview', label: 'Przegląd', icon: BarChart3 },
+    { id: 'orders', label: 'Zamówienia', icon: ShoppingCart },
     { id: 'inventory', label: 'Magazyn fizyczny', icon: Box },
     { id: 'postcards', label: 'Kartki (legacy)', icon: Package },
     { id: 'registrations', label: 'Rejestracje QR', icon: QrCode },
@@ -296,6 +298,7 @@ const AdminPanel = () => {
         {activeTab === 'countries' && <AdminCountries />}
         {activeTab === 'card-designs' && <AdminCardDesigns />}
         {activeTab === 'inventory' && <AdminInventory />}
+        {activeTab === 'orders' && <AdminOrders />}
       </main>
     </div>
   );

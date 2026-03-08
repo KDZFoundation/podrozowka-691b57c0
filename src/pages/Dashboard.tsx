@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Package, ArrowLeft, Loader2, Shield } from "lucide-react";
+import { User, Package, ArrowLeft, Loader2, Shield, ShoppingCart } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import UserStats from "@/components/dashboard/UserStats";
 import MyPostcards from "@/components/dashboard/MyPostcards";
+import MyOrders from "@/components/dashboard/MyOrders";
 
 interface Profile {
   id: string;
@@ -23,7 +24,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'my-postcards'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'my-postcards' | 'my-orders'>('overview');
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -62,6 +63,7 @@ const Dashboard = () => {
 
   const tabs = [
     { id: 'overview', label: 'Przegląd', icon: User },
+    { id: 'my-orders', label: 'Moje zamówienia', icon: ShoppingCart },
     { id: 'my-postcards', label: 'Moje Podróżówki', icon: Package },
   ];
 
@@ -109,6 +111,7 @@ const Dashboard = () => {
 
       <main className="container mx-auto px-4 py-8">
         {activeTab === 'overview' && <UserStats profile={profile} userId={user.id} />}
+        {activeTab === 'my-orders' && <MyOrders userId={user.id} />}
         {activeTab === 'my-postcards' && <MyPostcards userId={user.id} />}
       </main>
     </div>
