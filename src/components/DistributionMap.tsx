@@ -164,6 +164,10 @@ const DistributionMap = () => {
       maxClusterRadius: 40,
       spiderfyOnMaxZoom: true,
       showCoverageOnHover: false,
+      animate: true,
+      animateAddingMarkers: true,
+      spiderLegPolylineOptions: { weight: 2, color: 'hsl(0, 72%, 45%)', opacity: 0.6 },
+      zoomToBoundsOnClick: true,
     }).addTo(map);
 
     mapRef.current = map;
