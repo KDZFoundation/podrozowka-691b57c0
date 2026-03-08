@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { CheckCircle, Loader2, AlertCircle, Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 import RegisterPostcardForm from "@/components/register/RegisterPostcardForm";
 import RegisterPostcardSuccess from "@/components/register/RegisterPostcardSuccess";
 import RegisterPostcardAlreadyRegistered from "@/components/register/RegisterPostcardAlreadyRegistered";
@@ -25,6 +26,7 @@ export interface PostcardInfo {
 const RegisterPostcard = () => {
   const { qrToken } = useParams<{ qrToken: string }>();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [postcard, setPostcard] = useState<PostcardInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -99,6 +101,13 @@ const RegisterPostcard = () => {
 
     setIsSuccess(true);
     toast({ title: "Kartka zarejestrowana! 🎉" });
+
+    // Invalidate related queries so dashboard/stats refresh automatically
+    queryClient.invalidateQueries({ queryKey: ['platform-stats'] });
+    queryClient.invalidateQueries({ queryKey: ['community-gallery'] });
+    queryClient.invalidateQueries({ queryKey: ['user-ranking'] });
+    queryClient.invalidateQueries({ queryKey: ['postcards'] });
+    queryClient.invalidateQueries({ queryKey: ['user-stats'] });
   };
 
   if (isLoading) {
