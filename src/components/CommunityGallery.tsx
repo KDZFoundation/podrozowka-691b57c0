@@ -3,56 +3,45 @@ import { motion } from "framer-motion";
 import { MapPin, Calendar, Heart, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
-interface DeliveredPostcard {
+interface RegisteredPostcard {
   id: string;
-  tracking_code: string;
-  given_to_name: string | null;
-  given_to_country: string | null;
-  given_at: string | null;
-  photo_url: string | null;
-  message: string | null;
-  language: string;
-  owner_display_name: string | null;
+  buyer_display_name: string | null;
+  recipient_name: string | null;
+  recipient_message: string | null;
+  registered_at: string | null;
+  country_name: string | null;
+  country_flag: string | null;
+  design_view_name: string | null;
 }
 
 const CommunityGallery = () => {
-  const [postcards, setPostcards] = useState<DeliveredPostcard[]>([]);
+  const [postcards, setPostcards] = useState<RegisteredPostcard[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchGallery = async () => {
-      // Fetch delivered postcards with owner profile info
-      const { data: postcardsData, error: postcardsError } = await supabase
+      const { data, error } = await supabase
         .from('postcards')
-        .select('id, tracking_code, given_to_name, given_to_country, given_at, photo_url, message, language, owner_id')
-        .eq('status', 'delivered')
-        .not('photo_url', 'is', null)
-        .order('given_at', { ascending: false })
+        .select(`
+          id, buyer_display_name, recipient_name, recipient_message, registered_at,
+          designs!inner(view_name, countries!inner(name, flag))
+        `)
+        .eq('status', 'registered')
+        .order('registered_at', { ascending: false })
         .limit(12);
 
-      if (!postcardsError && postcardsData) {
-        // Fetch owner profiles
-        const ownerIds = [...new Set(postcardsData.map(p => p.owner_id))];
-        const { data: profilesData } = await supabase
-          .from('profiles')
-          .select('user_id, display_name')
-          .in('user_id', ownerIds);
-
-        const profileMap = new Map(profilesData?.map(p => [p.user_id, p.display_name]) || []);
-
-        const enrichedPostcards: DeliveredPostcard[] = postcardsData.map(p => ({
+      if (!error && data) {
+        const enriched: RegisteredPostcard[] = data.map((p: any) => ({
           id: p.id,
-          tracking_code: p.tracking_code,
-          given_to_name: p.given_to_name,
-          given_to_country: p.given_to_country,
-          given_at: p.given_at,
-          photo_url: p.photo_url,
-          message: p.message,
-          language: p.language,
-          owner_display_name: profileMap.get(p.owner_id) || null,
+          buyer_display_name: p.buyer_display_name,
+          recipient_name: p.recipient_name,
+          recipient_message: p.recipient_message,
+          registered_at: p.registered_at,
+          country_name: p.designs?.countries?.name || null,
+          country_flag: p.designs?.countries?.flag || null,
+          design_view_name: p.designs?.view_name || null,
         }));
-
-        setPostcards(enrichedPostcards);
+        setPostcards(enriched);
       }
       setIsLoading(false);
     };
@@ -93,10 +82,10 @@ const CommunityGallery = () => {
               Galeria Społeczności
             </span>
             <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Bądź pierwszym, który podzieli się zdjęciem!
+              Bądź pierwszym, który zarejestruje kartkę!
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto mb-8">
-              Po przekazaniu Podróżówki komuś w podróży, dodaj zdjęcie i podziel się swoją historią z całą społecznością.
+              Po otrzymaniu Podróżówki zeskanuj QR kod i zarejestruj ją — Twoja kartka pojawi się tutaj.
             </p>
             <div className="flex justify-center gap-4">
               <a 
@@ -127,10 +116,10 @@ const CommunityGallery = () => {
             Galeria Społeczności
           </span>
           <h2 className="font-display text-3xl md:text-5xl font-bold text-foreground mb-4">
-            Podróżówki na świecie
+            Zarejestrowane Podróżówki
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Zobacz zdjęcia Podróżówek przekazanych przez naszą społeczność ludziom na całym świecie.
+            Zobacz kartki zarejestrowane przez obdarowanych z całego świata.
           </p>
         </motion.div>
 
@@ -142,58 +131,44 @@ const CommunityGallery = () => {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: index * 0.05 }}
               viewport={{ once: true }}
-              className="group bg-card rounded-xl overflow-hidden shadow-soft hover:shadow-card transition-all"
+              className="group bg-card rounded-xl overflow-hidden shadow-soft hover:shadow-card transition-all p-5"
             >
-              {/* Photo */}
-              <div className="aspect-[4/3] overflow-hidden">
-                <img
-                  src={postcard.photo_url || '/placeholder.svg'}
-                  alt={`Podróżówka w ${postcard.given_to_country}`}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
+              {/* Country & Design */}
+              <div className="flex items-center gap-2 text-sm text-accent mb-3">
+                {postcard.country_flag && <span className="text-xl">{postcard.country_flag}</span>}
+                <span className="font-medium">{postcard.country_name}</span>
               </div>
 
-              {/* Info */}
-              <div className="p-4">
-                {/* Location */}
-                {postcard.given_to_country && (
-                  <div className="flex items-center gap-2 text-sm text-accent mb-2">
-                    <MapPin className="w-4 h-4" />
-                    <span className="font-medium">{postcard.given_to_country}</span>
-                    {postcard.given_to_name && (
-                      <span className="text-muted-foreground">• dla {postcard.given_to_name}</span>
-                    )}
-                  </div>
-                )}
+              {postcard.design_view_name && (
+                <p className="text-xs text-muted-foreground mb-3">{postcard.design_view_name}</p>
+              )}
 
-                {/* Message preview */}
-                {postcard.message && (
-                  <p className="text-sm text-foreground line-clamp-2 mb-3">
-                    "{postcard.message}"
-                  </p>
-                )}
+              {/* Message */}
+              {postcard.recipient_message && (
+                <p className="text-sm text-foreground line-clamp-3 mb-3">
+                  "{postcard.recipient_message}"
+                </p>
+              )}
 
-                {/* Footer */}
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
+              {/* Footer */}
+              <div className="flex items-center justify-between text-xs text-muted-foreground mt-auto pt-3 border-t border-border">
+                <div className="flex items-center gap-1">
+                  <User className="w-3 h-3" />
+                  <span>Od: {postcard.buyer_display_name || "Podróżnik"}</span>
+                </div>
+                {postcard.registered_at && (
                   <div className="flex items-center gap-1">
-                    <User className="w-3 h-3" />
-                    <span>{postcard.owner_display_name || "Anonim"}</span>
+                    <Calendar className="w-3 h-3" />
+                    <span>{formatDate(postcard.registered_at)}</span>
                   </div>
-                  {postcard.given_at && (
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      <span>{formatDate(postcard.given_at)}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Tracking code */}
-                <div className="mt-3 pt-3 border-t border-border">
-                  <span className="text-xs font-mono text-muted-foreground">
-                    {postcard.tracking_code}
-                  </span>
-                </div>
+                )}
               </div>
+
+              {postcard.recipient_name && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  Zarejestrowana przez: {postcard.recipient_name}
+                </p>
+              )}
             </motion.div>
           ))}
         </div>
