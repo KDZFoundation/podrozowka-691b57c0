@@ -202,12 +202,12 @@ const RegisterPostcard = () => {
         <div className="bg-card rounded-2xl p-6 md:p-8 shadow-soft">
           {/* Header */}
           <div className="text-center mb-6">
-            <span className="text-4xl mb-2 block">{postcard.design.country_flag}</span>
+            <span className="text-4xl mb-2 block">🇵🇱</span>
             <h1 className="font-display text-2xl font-bold text-foreground mb-1">
               Masz Podróżówkę!
             </h1>
             <p className="text-muted-foreground">
-              {postcard.design.country_name} — {postcard.design.view_name}
+              {postcard.design.country_name} — {postcard.design.title}
             </p>
             <p className="text-sm text-muted-foreground mt-2">
               Od: <strong className="text-foreground">{postcard.buyer_display_name || "Podróżnik"}</strong>
