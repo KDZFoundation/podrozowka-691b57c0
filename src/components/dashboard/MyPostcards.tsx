@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Package, Calendar, CheckCircle, ChevronDown, ChevronUp, ShoppingBag, Mail, MessageSquare, User } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 interface InventoryCard {
@@ -25,74 +26,66 @@ const statusLabels: Record<string, { label: string; color: string; icon: typeof 
   registered: { label: "Zarejestrowana", color: "text-accent", icon: CheckCircle },
 };
 
+const fetchPostcards = async (userId: string): Promise<InventoryCard[]> => {
+  const { data: units, error } = await supabase
+    .from('inventory_units')
+    .select(`
+      id, business_status, registered_at,
+      card_designs!inner(title, view_no, countries!inner(name_pl))
+    `)
+    .eq('traveler_user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  if (!units) return [];
+
+  const unitIds = units.filter((u: any) => u.business_status === 'registered').map((u: any) => u.id);
+
+  let registrations: Record<string, { recipient_name: string; recipient_message: string | null; recipient_email: string | null; contact_opt_in: boolean }> = {};
+
+  if (unitIds.length > 0) {
+    const { data: regs } = await supabase
+      .from('recipient_registrations')
+      .select('inventory_unit_id, recipient_name, recipient_message, recipient_email, contact_opt_in')
+      .in('inventory_unit_id', unitIds);
+
+    if (regs) {
+      regs.forEach((r: any) => {
+        registrations[r.inventory_unit_id] = {
+          recipient_name: r.recipient_name,
+          recipient_message: r.recipient_message,
+          recipient_email: r.recipient_email,
+          contact_opt_in: r.contact_opt_in,
+        };
+      });
+    }
+  }
+
+  return units.map((u: any) => {
+    const reg = registrations[u.id];
+    return {
+      id: u.id,
+      business_status: u.business_status,
+      registered_at: u.registered_at,
+      country_name: u.card_designs?.countries?.name_pl || null,
+      design_title: u.card_designs?.title || null,
+      view_no: u.card_designs?.view_no ?? 0,
+      recipient_name: reg?.recipient_name || null,
+      recipient_message: reg?.recipient_message || null,
+      recipient_email: reg?.contact_opt_in ? reg?.recipient_email : null,
+      contact_opt_in: reg?.contact_opt_in || false,
+    };
+  });
+};
+
 const MyPostcards = ({ userId }: MyPostcardsProps) => {
-  const [cards, setCards] = useState<InventoryCard[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'purchased' | 'registered'>('all');
 
-  useEffect(() => {
-    const fetchCards = async () => {
-      // Fetch inventory units for this traveler
-      const { data: units, error } = await supabase
-        .from('inventory_units')
-        .select(`
-          id, business_status, registered_at,
-          card_designs!inner(title, view_no, countries!inner(name_pl))
-        `)
-        .eq('traveler_user_id', userId)
-        .order('created_at', { ascending: false });
-
-      if (error || !units) {
-        setIsLoading(false);
-        return;
-      }
-
-      // Get registration data for registered units
-      const unitIds = units.filter((u: any) => u.business_status === 'registered').map((u: any) => u.id);
-
-      let registrations: Record<string, { recipient_name: string; recipient_message: string | null; recipient_email: string | null; contact_opt_in: boolean }> = {};
-
-      if (unitIds.length > 0) {
-        const { data: regs } = await supabase
-          .from('recipient_registrations')
-          .select('inventory_unit_id, recipient_name, recipient_message, recipient_email, contact_opt_in')
-          .in('inventory_unit_id', unitIds);
-
-        if (regs) {
-          regs.forEach((r: any) => {
-            registrations[r.inventory_unit_id] = {
-              recipient_name: r.recipient_name,
-              recipient_message: r.recipient_message,
-              recipient_email: r.recipient_email,
-              contact_opt_in: r.contact_opt_in,
-            };
-          });
-        }
-      }
-
-      const mapped: InventoryCard[] = units.map((u: any) => {
-        const reg = registrations[u.id];
-        return {
-          id: u.id,
-          business_status: u.business_status,
-          registered_at: u.registered_at,
-          country_name: u.card_designs?.countries?.name_pl || null,
-          design_title: u.card_designs?.title || null,
-          view_no: u.card_designs?.view_no ?? 0,
-          recipient_name: reg?.recipient_name || null,
-          recipient_message: reg?.recipient_message || null,
-          recipient_email: reg?.contact_opt_in ? reg?.recipient_email : null,
-          contact_opt_in: reg?.contact_opt_in || false,
-        };
-      });
-
-      setCards(mapped);
-      setIsLoading(false);
-    };
-
-    fetchCards();
-  }, [userId]);
+  const { data: cards = [], isLoading } = useQuery({
+    queryKey: ['postcards', userId],
+    queryFn: () => fetchPostcards(userId),
+  });
 
   const filteredCards = cards.filter(c => filter === 'all' || c.business_status === filter);
 
@@ -119,7 +112,6 @@ const MyPostcards = ({ userId }: MyPostcardsProps) => {
 
   return (
     <div className="space-y-6">
-      {/* Filters */}
       <div className="flex gap-2 flex-wrap">
         <button onClick={() => setFilter('all')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'all' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}>
           Wszystkie ({cards.length})
@@ -132,7 +124,6 @@ const MyPostcards = ({ userId }: MyPostcardsProps) => {
         </button>
       </div>
 
-      {/* Cards list */}
       <div className="space-y-4">
         {filteredCards.map((card, index) => {
           const status = statusLabels[card.business_status || 'purchased'] || statusLabels.purchased;
@@ -165,7 +156,6 @@ const MyPostcards = ({ userId }: MyPostcardsProps) => {
               {isExpanded && (
                 <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="border-t border-border">
                   <div className="p-4 space-y-3">
-                    {/* Registration details */}
                     {card.business_status === 'registered' && card.recipient_name && (
                       <div className="bg-accent/10 rounded-lg p-4 space-y-2">
                         <div className="flex items-center gap-2">
@@ -193,7 +183,6 @@ const MyPostcards = ({ userId }: MyPostcardsProps) => {
                       </div>
                     )}
 
-                    {/* Info grid */}
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <p className="text-muted-foreground">Kraj</p>

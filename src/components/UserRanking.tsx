@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Trophy, Medal, Award, Heart } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 interface RankedUser {
@@ -11,27 +11,23 @@ interface RankedUser {
   postcards_purchased: number;
 }
 
+const fetchRanking = async (): Promise<RankedUser[]> => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, display_name, avatar_url, country, postcards_purchased')
+    .gt('postcards_purchased', 0)
+    .order('postcards_purchased', { ascending: false })
+    .limit(10);
+
+  if (error) throw error;
+  return data || [];
+};
+
 const UserRanking = () => {
-  const [topUsers, setTopUsers] = useState<RankedUser[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchRanking = async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, display_name, avatar_url, country, postcards_purchased')
-        .gt('postcards_purchased', 0)
-        .order('postcards_purchased', { ascending: false })
-        .limit(10);
-
-      if (!error && data) {
-        setTopUsers(data);
-      }
-      setIsLoading(false);
-    };
-
-    fetchRanking();
-  }, []);
+  const { data: topUsers = [], isLoading } = useQuery({
+    queryKey: ['user-ranking'],
+    queryFn: fetchRanking,
+  });
 
   const getRankIcon = (index: number) => {
     switch (index) {

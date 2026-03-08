@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Users, Globe2, CheckCircle, ShoppingBag } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Stats {
@@ -32,35 +33,35 @@ const AnimatedCounter = ({ value, duration = 2000 }: { value: number; duration?:
   return <span>{displayValue.toLocaleString('pl-PL')}</span>;
 };
 
+const fetchPlatformStats = async (): Promise<Stats> => {
+  const { data, error } = await supabase
+    .from('platform_stats')
+    .select('*')
+    .maybeSingle();
+
+  if (error) throw error;
+
+  return {
+    total_members: data?.total_members ?? 0,
+    total_countries: data?.total_countries ?? 0,
+    total_registered: data?.total_registered ?? 0,
+    total_purchased: data?.total_purchased ?? 0,
+  };
+};
+
 const PlatformStats = () => {
-  const [stats, setStats] = useState<Stats>({ total_members: 0, total_countries: 0, total_registered: 0, total_purchased: 0 });
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ['platform-stats'],
+    queryFn: fetchPlatformStats,
+  });
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      const { data, error } = await supabase
-        .from('platform_stats')
-        .select('*')
-        .maybeSingle();
-
-      if (!error && data) {
-        setStats({
-          total_members: data.total_members,
-          total_countries: data.total_countries,
-          total_registered: data.total_registered,
-          total_purchased: data.total_purchased,
-        });
-      }
-      setIsLoading(false);
-    };
-    fetchStats();
-  }, []);
+  const s = stats ?? { total_members: 0, total_countries: 0, total_registered: 0, total_purchased: 0 };
 
   const statsData = [
-    { icon: Users, value: stats.total_members, label: "Członków platformy", color: "text-primary", bgColor: "bg-primary/10" },
-    { icon: Globe2, value: stats.total_countries, label: "Krajów osiągniętych", color: "text-accent", bgColor: "bg-accent/10" },
-    { icon: CheckCircle, value: stats.total_registered, label: "Podróżówek zarejestrowanych", color: "text-[hsl(var(--gold))]", bgColor: "bg-[hsl(var(--gold))]/10" },
-    { icon: ShoppingBag, value: stats.total_purchased, label: "Podróżówek zakupionych", color: "text-primary", bgColor: "bg-primary/10" },
+    { icon: Users, value: s.total_members, label: "Członków platformy", color: "text-primary", bgColor: "bg-primary/10" },
+    { icon: Globe2, value: s.total_countries, label: "Krajów osiągniętych", color: "text-accent", bgColor: "bg-accent/10" },
+    { icon: CheckCircle, value: s.total_registered, label: "Podróżówek zarejestrowanych", color: "text-[hsl(var(--gold))]", bgColor: "bg-[hsl(var(--gold))]/10" },
+    { icon: ShoppingBag, value: s.total_purchased, label: "Podróżówek zakupionych", color: "text-primary", bgColor: "bg-primary/10" },
   ];
 
   return (

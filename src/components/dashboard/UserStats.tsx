@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ShoppingBag, Package, Globe2, Trophy, MapPin, Percent } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Profile {
@@ -26,52 +26,46 @@ interface CountryStat {
   registered: number;
 }
 
+const fetchUserStats = async (userId: string) => {
+  const { data, error } = await supabase
+    .from('inventory_units')
+    .select('id, business_status, card_designs!inner(countries!inner(name_pl))')
+    .eq('traveler_user_id', userId);
+
+  if (error) throw error;
+
+  const units = data || [];
+  const totalUnits = units.length;
+  const purchasedCount = units.filter((u: any) => u.business_status === 'purchased').length;
+  const registeredCount = units.filter((u: any) => u.business_status === 'registered').length;
+
+  const countryMap = new Map<string, { total: number; registered: number }>();
+  units.forEach((u: any) => {
+    const name = u.card_designs?.countries?.name_pl;
+    if (!name) return;
+    const existing = countryMap.get(name) || { total: 0, registered: 0 };
+    existing.total++;
+    if (u.business_status === 'registered') existing.registered++;
+    countryMap.set(name, existing);
+  });
+
+  const countryStats: CountryStat[] = Array.from(countryMap.entries())
+    .map(([name, s]) => ({ name, ...s }))
+    .sort((a, b) => b.total - a.total);
+
+  return { totalUnits, purchasedCount, registeredCount, countryStats };
+};
+
 const UserStats = ({ profile, userId }: UserStatsProps) => {
-  const [totalUnits, setTotalUnits] = useState(0);
-  const [purchasedCount, setPurchasedCount] = useState(0);
-  const [registeredCount, setRegisteredCount] = useState(0);
-  const [countryStats, setCountryStats] = useState<CountryStat[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data, isLoading } = useQuery({
+    queryKey: ['user-stats', userId],
+    queryFn: () => fetchUserStats(userId),
+  });
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      const { data, error } = await supabase
-        .from('inventory_units')
-        .select('id, business_status, card_designs!inner(countries!inner(name_pl))')
-        .eq('traveler_user_id', userId);
-
-      if (!error && data) {
-        const total = data.length;
-        const purchased = data.filter((u: any) => u.business_status === 'purchased').length;
-        const registered = data.filter((u: any) => u.business_status === 'registered').length;
-
-        setTotalUnits(total);
-        setPurchasedCount(purchased);
-        setRegisteredCount(registered);
-
-        // Per-country stats
-        const countryMap = new Map<string, { total: number; registered: number }>();
-        data.forEach((u: any) => {
-          const name = u.card_designs?.countries?.name_pl;
-          if (!name) return;
-          const existing = countryMap.get(name) || { total: 0, registered: 0 };
-          existing.total++;
-          if (u.business_status === 'registered') existing.registered++;
-          countryMap.set(name, existing);
-        });
-
-        setCountryStats(
-          Array.from(countryMap.entries())
-            .map(([name, s]) => ({ name, ...s }))
-            .sort((a, b) => b.total - a.total)
-        );
-      }
-      setIsLoading(false);
-    };
-
-    fetchStats();
-  }, [userId]);
-
+  const totalUnits = data?.totalUnits ?? 0;
+  const purchasedCount = data?.purchasedCount ?? 0;
+  const registeredCount = data?.registeredCount ?? 0;
+  const countryStats = data?.countryStats ?? [];
   const regPercent = totalUnits > 0 ? Math.round((registeredCount / totalUnits) * 100) : 0;
 
   const statsCards = [
@@ -83,7 +77,6 @@ const UserStats = ({ profile, userId }: UserStatsProps) => {
 
   return (
     <div className="space-y-8">
-      {/* Welcome card */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-card rounded-2xl p-6 md:p-8 shadow-soft">
         <div className="flex items-start gap-4">
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -99,7 +92,6 @@ const UserStats = ({ profile, userId }: UserStatsProps) => {
         </div>
       </motion.div>
 
-      {/* Stat cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {statsCards.map((stat, index) => (
           <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }} className="bg-card rounded-xl p-5 shadow-soft">
@@ -112,7 +104,6 @@ const UserStats = ({ profile, userId }: UserStatsProps) => {
         ))}
       </div>
 
-      {/* Per-country stats */}
       {countryStats.length > 0 && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="bg-card rounded-xl p-6 shadow-soft">
           <h3 className="font-display text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
