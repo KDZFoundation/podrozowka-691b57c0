@@ -21,8 +21,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [role, setRole] = useState<AppRole | null>(null);
+  const [roleLoading, setRoleLoading] = useState(true);
 
   const fetchRole = async (userId: string) => {
+    setRoleLoading(true);
     const { data, error } = await supabase
       .from('user_roles')
       .select('role')
@@ -34,6 +36,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } else {
       setRole('traveler'); // default
     }
+    setRoleLoading(false);
   };
 
   useEffect(() => {
@@ -47,16 +50,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setTimeout(() => fetchRole(session.user.id), 0);
         } else {
           setRole(null);
+          setRoleLoading(false);
         }
         setIsLoading(false);
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchRole(session.user.id);
+        await fetchRole(session.user.id);
+      } else {
+        setRoleLoading(false);
       }
       setIsLoading(false);
     });
