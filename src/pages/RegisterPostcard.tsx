@@ -14,11 +14,10 @@ interface PostcardInfo {
   recipient_name: string | null;
   registered_at: string | null;
   design: {
-    view_name: string;
-    image_url: string | null;
+    title: string;
+    image_front_url: string | null;
     country_name: string;
-    country_flag: string;
-    language_name: string;
+    country_iso2: string;
   };
 }
 
