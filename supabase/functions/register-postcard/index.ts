@@ -104,6 +104,15 @@ Deno.serve(async (req) => {
         });
       }
 
+      if (recipient_email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(recipient_email.trim())) {
+          return new Response(JSON.stringify({ error: 'Nieprawidłowy format email' }), {
+            status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+
       if (recipient_name.length > 100) {
         return new Response(JSON.stringify({ error: 'Imię zbyt długie (max 100)' }), {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
