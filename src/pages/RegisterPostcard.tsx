@@ -164,7 +164,7 @@ const RegisterPostcard = () => {
             Ta Podróżówka została zarejestrowana przez <strong>{postcard.recipient_name}</strong>.
           </p>
           <p className="text-sm text-muted-foreground mb-6">
-            {postcard.design.country_flag} {postcard.design.country_name} — {postcard.design.view_name}
+            {postcard.design.country_name} — {postcard.design.title}
           </p>
           <a href="/" className="text-primary hover:underline">Dowiedz się więcej o Podróżówce</a>
         </motion.div>
