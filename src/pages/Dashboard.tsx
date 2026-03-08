@@ -18,6 +18,8 @@ interface Profile {
   city: string | null;
   postcards_purchased: number;
   postcards_received: number;
+  total_points: number;
+  current_rank: string;
 }
 
 const Dashboard = () => {
