@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Search, ArrowLeft } from "lucide-react";
+import { Loader2, Search, ArrowLeft, PackageCheck, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface OrderRow {
