@@ -64,11 +64,13 @@ const Auth = () => {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
 
         if (error) {
+          const description = error.message.includes("Invalid login credentials")
+              ? "Nieprawidłowy email lub hasło."
+              : "Wystąpił błąd podczas logowania. Spróbuj ponownie.";
+          console.error("Login error:", error.message);
           toast({
             title: "Błąd logowania",
-            description: error.message.includes("Invalid login credentials")
-              ? "Nieprawidłowy email lub hasło."
-              : error.message,
+            description,
             variant: "destructive",
           });
         } else {
