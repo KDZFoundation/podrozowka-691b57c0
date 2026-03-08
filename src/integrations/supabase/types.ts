@@ -415,12 +415,14 @@ export type Database = {
           city: string | null
           country: string | null
           created_at: string
+          current_rank: string
           display_name: string | null
           first_name: string | null
           id: string
           last_name: string | null
           postcards_purchased: number
           postcards_received: number
+          total_points: number
           updated_at: string
           user_id: string
         }
@@ -430,12 +432,14 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string
+          current_rank?: string
           display_name?: string | null
           first_name?: string | null
           id?: string
           last_name?: string | null
           postcards_purchased?: number
           postcards_received?: number
+          total_points?: number
           updated_at?: string
           user_id: string
         }
@@ -445,12 +449,14 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string
+          current_rank?: string
           display_name?: string | null
           first_name?: string | null
           id?: string
           last_name?: string | null
           postcards_purchased?: number
           postcards_received?: number
+          total_points?: number
           updated_at?: string
           user_id?: string
         }
@@ -697,7 +703,18 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      user_gamification_stats: {
+        Row: {
+          display_name: string | null
+          impact_rank: string | null
+          registration_count: number | null
+          total_points: number | null
+          unique_countries: number | null
+          unit_count: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       generate_claim_code: { Args: never; Returns: string }
@@ -709,6 +726,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      recalculate_user_gamification: {
+        Args: { _user_id: string }
+        Returns: undefined
       }
       reserve_inventory_for_order: {
         Args: { _order_id: string }

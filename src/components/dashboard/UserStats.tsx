@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ShoppingBag, Package, Globe2, Trophy, MapPin, Percent } from "lucide-react";
+import { ShoppingBag, Package, Globe2, Trophy, MapPin, Percent, Star, Award } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -13,6 +13,8 @@ interface Profile {
   city: string | null;
   postcards_purchased: number;
   postcards_received: number;
+  total_points?: number;
+  current_rank?: string;
 }
 
 interface UserStatsProps {
@@ -25,6 +27,13 @@ interface CountryStat {
   total: number;
   registered: number;
 }
+
+const RANK_CONFIG: Record<string, { color: string; bgColor: string; next: string | null; nextThreshold: number }> = {
+  'Zwiadowca': { color: 'text-muted-foreground', bgColor: 'bg-muted', next: 'Ambasador', nextThreshold: 500 },
+  'Ambasador': { color: 'text-[hsl(var(--gold))]', bgColor: 'bg-[hsl(var(--gold))]/10', next: 'Misjonarz Kultury', nextThreshold: 2500 },
+  'Misjonarz Kultury': { color: 'text-accent', bgColor: 'bg-accent/10', next: 'Legenda Podróżówki', nextThreshold: 7500 },
+  'Legenda Podróżówki': { color: 'text-primary', bgColor: 'bg-primary/10', next: null, nextThreshold: 0 },
+};
 
 const fetchUserStats = async (userId: string) => {
   const { data, error } = await supabase
@@ -68,6 +77,13 @@ const UserStats = ({ profile, userId }: UserStatsProps) => {
   const countryStats = data?.countryStats ?? [];
   const regPercent = totalUnits > 0 ? Math.round((registeredCount / totalUnits) * 100) : 0;
 
+  const totalPoints = profile?.total_points ?? 0;
+  const currentRank = profile?.current_rank ?? 'Zwiadowca';
+  const rankInfo = RANK_CONFIG[currentRank] ?? RANK_CONFIG['Zwiadowca'];
+  const progressToNext = rankInfo.next
+    ? Math.min(100, Math.round((totalPoints / rankInfo.nextThreshold) * 100))
+    : 100;
+
   const statsCards = [
     { icon: Package, value: totalUnits, label: "Wszystkie kartki", color: "text-primary", bgColor: "bg-primary/10" },
     { icon: ShoppingBag, value: purchasedCount, label: "Kupione (aktywne)", color: "text-[hsl(var(--gold))]", bgColor: "bg-[hsl(var(--gold))]/10" },
@@ -90,6 +106,36 @@ const UserStats = ({ profile, userId }: UserStatsProps) => {
             )}
           </div>
         </div>
+      </motion.div>
+
+      {/* Gamification / Cultural Impact */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="bg-card rounded-2xl p-6 md:p-8 shadow-soft">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-display text-lg font-semibold text-foreground flex items-center gap-2">
+            <Award className={`w-5 h-5 ${rankInfo.color}`} /> Cultural Impact
+          </h3>
+          <span className={`text-xs font-semibold px-3 py-1 rounded-full ${rankInfo.bgColor} ${rankInfo.color}`}>
+            {currentRank}
+          </span>
+        </div>
+        <div className="flex items-end gap-3 mb-3">
+          <p className={`font-display text-4xl font-bold ${rankInfo.color}`}>{totalPoints}</p>
+          <p className="text-sm text-muted-foreground mb-1">punktów</p>
+        </div>
+        {rankInfo.next && (
+          <div>
+            <div className="flex justify-between text-xs text-muted-foreground mb-1">
+              <span>{currentRank}</span>
+              <span>{rankInfo.next} ({rankInfo.nextThreshold} pkt)</span>
+            </div>
+            <div className="h-2 bg-muted rounded-full overflow-hidden">
+              <div className={`h-full rounded-full transition-all bg-primary`} style={{ width: `${progressToNext}%` }} />
+            </div>
+          </div>
+        )}
+        {!rankInfo.next && (
+          <p className="text-sm text-muted-foreground flex items-center gap-1"><Star className="w-4 h-4 text-primary" /> Osiągnąłeś najwyższą rangę!</p>
+        )}
       </motion.div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
