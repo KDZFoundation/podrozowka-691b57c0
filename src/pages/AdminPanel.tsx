@@ -45,7 +45,7 @@ const AdminPanel = () => {
   const { user, isLoading: authLoading, isAdmin } = useAuth();
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'postcards' | 'registrations' | 'countries' | 'card-designs' | 'inventory' | 'orders' | 'qr-jobs'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'postcards' | 'registrations' | 'countries' | 'card-designs' | 'inventory' | 'orders' | 'qr-jobs' | 'shipments'>('overview');
   const [stats, setStats] = useState<AdminStats>({ total: 0, available: 0, purchased: 0, registered: 0, countries: 0, designs: 0 });
   const [postcards, setPostcards] = useState<PostcardRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
