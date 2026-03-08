@@ -114,10 +114,10 @@ const AdminInventory = () => {
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
     if (fulfillmentFilter !== "all") {
-      query = query.eq("fulfillment_status", fulfillmentFilter);
+      query = query.eq("fulfillment_status", fulfillmentFilter as any);
     }
     if (businessFilter !== "all") {
-      query = query.eq("business_status", businessFilter);
+      query = query.eq("business_status", businessFilter as any);
     }
     if (countryFilter !== "all") {
       query = query.eq("card_designs.countries.id", countryFilter);
