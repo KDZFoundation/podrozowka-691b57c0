@@ -717,6 +717,10 @@ export type Database = {
       }
     }
     Functions: {
+      calculate_user_impact_points: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
       generate_claim_code: { Args: never; Returns: string }
       generate_order_number: { Args: never; Returns: string }
       generate_tracking_code: { Args: never; Returns: string }
