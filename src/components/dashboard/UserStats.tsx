@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ShoppingBag, Package, Globe2, Trophy, MapPin, Percent } from "lucide-react";
+import { ShoppingBag, Package, Globe2, Trophy, MapPin, Percent, Star, Award } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -13,6 +13,8 @@ interface Profile {
   city: string | null;
   postcards_purchased: number;
   postcards_received: number;
+  total_points?: number;
+  current_rank?: string;
 }
 
 interface UserStatsProps {
@@ -25,6 +27,13 @@ interface CountryStat {
   total: number;
   registered: number;
 }
+
+const RANK_CONFIG: Record<string, { color: string; bgColor: string; next: string | null; nextThreshold: number }> = {
+  'Zwiadowca': { color: 'text-muted-foreground', bgColor: 'bg-muted', next: 'Ambasador', nextThreshold: 500 },
+  'Ambasador': { color: 'text-[hsl(var(--gold))]', bgColor: 'bg-[hsl(var(--gold))]/10', next: 'Misjonarz Kultury', nextThreshold: 2500 },
+  'Misjonarz Kultury': { color: 'text-accent', bgColor: 'bg-accent/10', next: 'Legenda Podróżówki', nextThreshold: 7500 },
+  'Legenda Podróżówki': { color: 'text-primary', bgColor: 'bg-primary/10', next: null, nextThreshold: 0 },
+};
 
 const fetchUserStats = async (userId: string) => {
   const { data, error } = await supabase
@@ -67,6 +76,13 @@ const UserStats = ({ profile, userId }: UserStatsProps) => {
   const registeredCount = data?.registeredCount ?? 0;
   const countryStats = data?.countryStats ?? [];
   const regPercent = totalUnits > 0 ? Math.round((registeredCount / totalUnits) * 100) : 0;
+
+  const totalPoints = profile?.total_points ?? 0;
+  const currentRank = profile?.current_rank ?? 'Zwiadowca';
+  const rankInfo = RANK_CONFIG[currentRank] ?? RANK_CONFIG['Zwiadowca'];
+  const progressToNext = rankInfo.next
+    ? Math.min(100, Math.round((totalPoints / rankInfo.nextThreshold) * 100))
+    : 100;
 
   const statsCards = [
     { icon: Package, value: totalUnits, label: "Wszystkie kartki", color: "text-primary", bgColor: "bg-primary/10" },
