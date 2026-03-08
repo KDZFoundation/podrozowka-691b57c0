@@ -507,6 +507,59 @@ export type Database = {
           },
         ]
       }
+      shipments: {
+        Row: {
+          carrier: string | null
+          created_at: string
+          delivered_at: string | null
+          id: string
+          notes: string | null
+          order_id: string
+          shipped_at: string | null
+          shipping_method: string | null
+          status: Database["public"]["Enums"]["shipment_status"]
+          tracking_number: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          carrier?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          id?: string
+          notes?: string | null
+          order_id: string
+          shipped_at?: string | null
+          shipping_method?: string | null
+          status?: Database["public"]["Enums"]["shipment_status"]
+          tracking_number?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          carrier?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          id?: string
+          notes?: string | null
+          order_id?: string
+          shipped_at?: string | null
+          shipping_method?: string | null
+          status?: Database["public"]["Enums"]["shipment_status"]
+          tracking_number?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stock_batches: {
         Row: {
           card_design_id: string
@@ -603,6 +656,12 @@ export type Database = {
         | "ready"
         | "printed"
         | "failed"
+      shipment_status:
+        | "pending"
+        | "packed"
+        | "shipped"
+        | "delivered"
+        | "returned"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -749,6 +808,13 @@ export const Constants = {
         "ready",
         "printed",
         "failed",
+      ],
+      shipment_status: [
+        "pending",
+        "packed",
+        "shipped",
+        "delivered",
+        "returned",
       ],
     },
   },
