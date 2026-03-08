@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Package, Globe2, QrCode, BarChart3, ArrowLeft,
-  Loader2, CheckCircle, ShoppingBag, Box, Image, ShoppingCart, Truck, UserCheck, Clock
+  Loader2, CheckCircle, ShoppingBag, Box, Image, ShoppingCart, Truck, UserCheck, Clock, Wrench
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
