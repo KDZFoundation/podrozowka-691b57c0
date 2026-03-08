@@ -418,6 +418,95 @@ export type Database = {
         }
         Relationships: []
       }
+      qr_print_job_items: {
+        Row: {
+          generated_at: string
+          id: string
+          inventory_unit_id: string
+          print_job_id: string
+          public_claim_code: string
+          qr_url: string
+        }
+        Insert: {
+          generated_at?: string
+          id?: string
+          inventory_unit_id: string
+          print_job_id: string
+          public_claim_code: string
+          qr_url: string
+        }
+        Update: {
+          generated_at?: string
+          id?: string
+          inventory_unit_id?: string
+          print_job_id?: string
+          public_claim_code?: string
+          qr_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qr_print_job_items_inventory_unit_id_fkey"
+            columns: ["inventory_unit_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qr_print_job_items_print_job_id_fkey"
+            columns: ["print_job_id"]
+            isOneToOne: false
+            referencedRelation: "qr_print_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qr_print_jobs: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          generated_items: number
+          id: string
+          name: string
+          order_id: string | null
+          shipment_id: string | null
+          status: Database["public"]["Enums"]["qr_print_job_status"]
+          total_items: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          generated_items?: number
+          id?: string
+          name: string
+          order_id?: string | null
+          shipment_id?: string | null
+          status?: Database["public"]["Enums"]["qr_print_job_status"]
+          total_items?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          generated_items?: number
+          id?: string
+          name?: string
+          order_id?: string | null
+          shipment_id?: string | null
+          status?: Database["public"]["Enums"]["qr_print_job_status"]
+          total_items?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qr_print_jobs_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stock_batches: {
         Row: {
           card_design_id: string
@@ -479,6 +568,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_claim_code: { Args: never; Returns: string }
       generate_order_number: { Args: never; Returns: string }
       generate_tracking_code: { Args: never; Returns: string }
       has_role: {
@@ -507,6 +597,12 @@ export type Database = {
         | "damaged"
       order_status: "pending" | "paid" | "fulfilled" | "cancelled"
       payment_status: "unpaid" | "paid" | "refunded" | "failed"
+      qr_print_job_status:
+        | "pending"
+        | "generating"
+        | "ready"
+        | "printed"
+        | "failed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -647,6 +743,13 @@ export const Constants = {
       ],
       order_status: ["pending", "paid", "fulfilled", "cancelled"],
       payment_status: ["unpaid", "paid", "refunded", "failed"],
+      qr_print_job_status: [
+        "pending",
+        "generating",
+        "ready",
+        "printed",
+        "failed",
+      ],
     },
   },
 } as const
