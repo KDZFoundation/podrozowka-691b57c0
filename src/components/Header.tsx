@@ -32,9 +32,7 @@ const Header = () => {
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <a href="/" className="flex items-center gap-2">
-            <span className="font-display text-xl md:text-2xl font-semibold text-foreground">
-              Podróżówka
-            </span>
+            <img src={logo} alt="Podróżówka" className="h-7 md:h-10 w-auto" />
           </a>
 
           {/* Desktop Navigation */}
