@@ -488,6 +488,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      reserve_inventory_for_order: {
+        Args: { _order_id: string }
+        Returns: Json
+      }
       update_country_count: { Args: never; Returns: undefined }
     }
     Enums: {
