@@ -176,6 +176,7 @@ const AdminPanel = () => {
     { id: 'orders', label: 'Zamówienia', icon: ShoppingCart },
     { id: 'inventory', label: 'Magazyn fizyczny', icon: Box },
     { id: 'qr-jobs', label: 'Druk QR', icon: QrCode },
+    { id: 'shipments', label: 'Wysyłki', icon: Truck },
     { id: 'postcards', label: 'Kartki (legacy)', icon: Package },
     { id: 'countries', label: 'Kraje', icon: Globe2 },
     { id: 'card-designs', label: 'Wzory kartek', icon: Image },
