@@ -5,6 +5,14 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+async function hashToken(token: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(token);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -17,42 +25,69 @@ Deno.serve(async (req) => {
     );
 
     if (req.method === 'GET') {
-      // Lookup postcard by qr_token (for displaying info before registration)
       const url = new URL(req.url);
-      const qr_token = url.searchParams.get('qr_token');
+      const token = url.searchParams.get('token');
 
-      if (!qr_token) {
-        return new Response(JSON.stringify({ error: 'qr_token is required' }), {
+      if (!token) {
+        return new Response(JSON.stringify({ error: 'token is required' }), {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
 
-      const { data: postcard, error } = await supabase
-        .from('postcards')
+      const tokenHash = await hashToken(token);
+
+      // Lookup inventory unit by token hash
+      const { data: unit, error } = await supabase
+        .from('inventory_units')
         .select(`
-          id, status, buyer_display_name, registered_at, recipient_name,
+          id, business_status, fulfillment_status, registered_at, traveler_user_id,
           card_designs!inner(title, image_front_url, countries!inner(name_pl, iso2))
         `)
-        .eq('qr_token', qr_token)
+        .eq('public_claim_token_hash', tokenHash)
         .maybeSingle();
 
-      if (error || !postcard) {
-        return new Response(JSON.stringify({ error: 'Postcard not found' }), {
+      if (error || !unit) {
+        return new Response(JSON.stringify({ error: 'Kartka nie znaleziona' }), {
           status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
 
-      // Never expose qr_token, buyer_id, order_reference, recipient_email
+      // Get traveler display name
+      let travelerName: string | null = null;
+      if (unit.traveler_user_id) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('display_name, first_name')
+          .eq('user_id', unit.traveler_user_id)
+          .maybeSingle();
+        travelerName = profile?.display_name || profile?.first_name || null;
+      }
+
+      // Check if already registered
+      let recipientName: string | null = null;
+      if (unit.business_status === 'registered') {
+        const { data: reg } = await supabase
+          .from('recipient_registrations')
+          .select('recipient_name')
+          .eq('inventory_unit_id', unit.id)
+          .maybeSingle();
+        recipientName = reg?.recipient_name || null;
+      }
+
+      const design = (unit as any).card_designs;
+
       return new Response(JSON.stringify({
-        status: postcard.status,
-        buyer_display_name: postcard.buyer_display_name,
-        registered_at: postcard.registered_at,
-        recipient_name: postcard.recipient_name,
+        unit_id: unit.id,
+        business_status: unit.business_status,
+        fulfillment_status: unit.fulfillment_status,
+        registered_at: unit.registered_at,
+        traveler_name: travelerName,
+        recipient_name: recipientName,
         design: {
-          title: (postcard as any).card_designs?.title,
-          image_front_url: (postcard as any).card_designs?.image_front_url,
-          country_name: (postcard as any).card_designs?.countries?.name_pl,
-          country_iso2: (postcard as any).card_designs?.countries?.iso2,
+          title: design?.title,
+          image_front_url: design?.image_front_url,
+          country_name: design?.countries?.name_pl,
+          country_iso2: design?.countries?.iso2,
         },
       }), {
         status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -61,68 +96,90 @@ Deno.serve(async (req) => {
 
     if (req.method === 'POST') {
       const body = await req.json();
-      const { qr_token, recipient_name, recipient_message, recipient_email } = body;
+      const { token, recipient_name, recipient_message, recipient_email, contact_opt_in } = body;
 
-      if (!qr_token || !recipient_name) {
-        return new Response(JSON.stringify({ error: 'qr_token and recipient_name are required' }), {
+      if (!token || !recipient_name) {
+        return new Response(JSON.stringify({ error: 'token i recipient_name są wymagane' }), {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
 
       if (recipient_name.length > 100) {
-        return new Response(JSON.stringify({ error: 'recipient_name too long (max 100)' }), {
+        return new Response(JSON.stringify({ error: 'Imię zbyt długie (max 100)' }), {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
 
       if (recipient_message && recipient_message.length > 500) {
-        return new Response(JSON.stringify({ error: 'recipient_message too long (max 500)' }), {
+        return new Response(JSON.stringify({ error: 'Wiadomość zbyt długa (max 500)' }), {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
 
-      // Fetch postcard
-      const { data: postcard, error: fetchError } = await supabase
-        .from('postcards')
-        .select('id, status')
-        .eq('qr_token', qr_token)
+      const tokenHash = await hashToken(token);
+
+      // Fetch unit
+      const { data: unit, error: fetchError } = await supabase
+        .from('inventory_units')
+        .select('id, business_status, fulfillment_status')
+        .eq('public_claim_token_hash', tokenHash)
         .maybeSingle();
 
-      if (fetchError || !postcard) {
-        return new Response(JSON.stringify({ error: 'Postcard not found' }), {
+      if (fetchError || !unit) {
+        return new Response(JSON.stringify({ error: 'Kartka nie znaleziona' }), {
           status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
 
-      if (postcard.status !== 'purchased') {
-        const msg = postcard.status === 'registered' 
-          ? 'This postcard has already been registered' 
-          : 'This postcard has not been purchased yet';
-        return new Response(JSON.stringify({ error: msg }), {
+      if (unit.business_status === 'registered') {
+        return new Response(JSON.stringify({ error: 'Ta kartka została już zarejestrowana' }), {
           status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
 
-      // Register the postcard
-      const { error: updateError } = await supabase
-        .from('postcards')
-        .update({
-          status: 'registered',
-          recipient_name,
-          recipient_message: recipient_message || null,
-          recipient_email: recipient_email || null,
-          registered_at: new Date().toISOString(),
-        })
-        .eq('id', postcard.id);
+      if (unit.business_status !== 'purchased') {
+        return new Response(JSON.stringify({ error: 'Ta kartka nie została jeszcze aktywowana' }), {
+          status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
 
-      if (updateError) {
-        return new Response(JSON.stringify({ error: 'Failed to register postcard' }), {
+      // Create registration record
+      const { error: insertError } = await supabase
+        .from('recipient_registrations')
+        .insert({
+          inventory_unit_id: unit.id,
+          recipient_name: recipient_name.trim(),
+          recipient_message: recipient_message?.trim() || null,
+          recipient_email: recipient_email?.trim() || null,
+          contact_opt_in: contact_opt_in === true,
+        });
+
+      if (insertError) {
+        // Unique constraint violation = already registered
+        if (insertError.code === '23505') {
+          return new Response(JSON.stringify({ error: 'Ta kartka została już zarejestrowana' }), {
+            status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        return new Response(JSON.stringify({ error: 'Nie udało się zarejestrować kartki' }), {
           status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
 
-      // Update country count
-      await supabase.rpc('update_country_count');
+      // Update inventory unit
+      const { error: updateError } = await supabase
+        .from('inventory_units')
+        .update({
+          business_status: 'registered',
+          registered_at: new Date().toISOString(),
+        })
+        .eq('id', unit.id);
+
+      if (updateError) {
+        return new Response(JSON.stringify({ error: 'Nie udało się zaktualizować statusu' }), {
+          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
 
       return new Response(JSON.stringify({ success: true }), {
         status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -1,18 +1,19 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { CheckCircle, Loader2, AlertCircle, Heart, MapPin, User, MessageSquare, Mail } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { CheckCircle, Loader2, AlertCircle, Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import RegisterPostcardForm from "@/components/register/RegisterPostcardForm";
+import RegisterPostcardSuccess from "@/components/register/RegisterPostcardSuccess";
+import RegisterPostcardAlreadyRegistered from "@/components/register/RegisterPostcardAlreadyRegistered";
 
-interface PostcardInfo {
-  status: string;
-  buyer_display_name: string | null;
-  recipient_name: string | null;
+export interface PostcardInfo {
+  unit_id: string;
+  business_status: string | null;
+  fulfillment_status: string;
   registered_at: string | null;
+  traveler_name: string | null;
+  recipient_name: string | null;
   design: {
     title: string;
     image_front_url: string | null;
@@ -27,11 +28,6 @@ const RegisterPostcard = () => {
   const [postcard, setPostcard] = useState<PostcardInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const [recipientName, setRecipientName] = useState("");
-  const [recipientMessage, setRecipientMessage] = useState("");
-  const [recipientEmail, setRecipientEmail] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
@@ -43,16 +39,9 @@ const RegisterPostcard = () => {
       }
 
       try {
-        const { data, error: fnError } = await supabase.functions.invoke('register-postcard', {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          body: undefined,
-        });
-
-        // Use fetch directly since functions.invoke doesn't support GET with query params well
         const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
         const response = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/register-postcard?qr_token=${encodeURIComponent(qrToken)}`,
+          `https://${projectId}.supabase.co/functions/v1/register-postcard?token=${encodeURIComponent(qrToken)}`,
           {
             method: 'GET',
             headers: {
@@ -68,8 +57,7 @@ const RegisterPostcard = () => {
           return;
         }
 
-        const postcardData = await response.json();
-        setPostcard(postcardData);
+        setPostcard(await response.json());
       } catch {
         setError("Wystąpił błąd podczas ładowania");
       }
@@ -79,51 +67,38 @@ const RegisterPostcard = () => {
     fetchPostcard();
   }, [qrToken]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!recipientName.trim()) {
-      toast({ title: "Podaj swoje imię", variant: "destructive" });
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/register-postcard`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          },
-          body: JSON.stringify({
-            qr_token: qrToken,
-            recipient_name: recipientName.trim(),
-            recipient_message: recipientMessage.trim() || undefined,
-            recipient_email: recipientEmail.trim() || undefined,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error || "Wystąpił błąd");
+  const handleSubmit = async (data: {
+    recipientName: string;
+    recipientMessage: string;
+    recipientEmail: string;
+    contactOptIn: boolean;
+  }) => {
+    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+    const response = await fetch(
+      `https://${projectId}.supabase.co/functions/v1/register-postcard`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({
+          token: qrToken,
+          recipient_name: data.recipientName.trim(),
+          recipient_message: data.recipientMessage.trim() || undefined,
+          recipient_email: data.recipientEmail.trim() || undefined,
+          contact_opt_in: data.contactOptIn,
+        }),
       }
+    );
 
-      setIsSuccess(true);
-      toast({ title: "Kartka zarejestrowana! 🎉" });
-    } catch (err) {
-      toast({
-        title: "Wystąpił błąd",
-        description: err instanceof Error ? err.message : "Spróbuj ponownie",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
+    if (!response.ok) {
+      const errData = await response.json();
+      throw new Error(errData.error || "Wystąpił błąd");
     }
+
+    setIsSuccess(true);
+    toast({ title: "Kartka zarejestrowana! 🎉" });
   };
 
   if (isLoading) {
@@ -151,142 +126,15 @@ const RegisterPostcard = () => {
 
   if (!postcard) return null;
 
-  // Already registered
-  if (postcard.status === 'registered') {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-md">
-          <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle className="w-8 h-8 text-accent" />
-          </div>
-          <h1 className="font-display text-2xl font-bold text-foreground mb-2">Kartka już zarejestrowana</h1>
-          <p className="text-muted-foreground mb-2">
-            Ta Podróżówka została zarejestrowana przez <strong>{postcard.recipient_name}</strong>.
-          </p>
-          <p className="text-sm text-muted-foreground mb-6">
-            {postcard.design.country_name} — {postcard.design.title}
-          </p>
-          <a href="/" className="text-primary hover:underline">Dowiedz się więcej o Podróżówce</a>
-        </motion.div>
-      </div>
-    );
+  if (postcard.business_status === 'registered') {
+    return <RegisterPostcardAlreadyRegistered postcard={postcard} />;
   }
 
-  // Success state
   if (isSuccess) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center max-w-md">
-          <div className="w-20 h-20 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Heart className="w-10 h-10 text-accent" />
-          </div>
-          <h1 className="font-display text-3xl font-bold text-foreground mb-3">Dziękujemy! 🎉</h1>
-          <p className="text-muted-foreground mb-4">
-            Twoja Podróżówka z <strong>{postcard.design.country_name}</strong> została zarejestrowana.
-          </p>
-          <p className="text-sm text-muted-foreground mb-6">
-            Wysłana przez: <strong>{postcard.buyer_display_name || "Podróżnik"}</strong>
-          </p>
-          <a href="/" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-all">
-            Dowiedz się więcej o Podróżówce
-          </a>
-        </motion.div>
-      </div>
-    );
+    return <RegisterPostcardSuccess postcard={postcard} />;
   }
 
-  // Registration form
-  return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-lg">
-        <div className="bg-card rounded-2xl p-6 md:p-8 shadow-soft">
-          {/* Header */}
-          <div className="text-center mb-6">
-            <span className="text-4xl mb-2 block">🇵🇱</span>
-            <h1 className="font-display text-2xl font-bold text-foreground mb-1">
-              Masz Podróżówkę!
-            </h1>
-            <p className="text-muted-foreground">
-              {postcard.design.country_name} — {postcard.design.title}
-            </p>
-            <p className="text-sm text-muted-foreground mt-2">
-              Od: <strong className="text-foreground">{postcard.buyer_display_name || "Podróżnik"}</strong>
-            </p>
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">
-                Twoje imię *
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="Jak masz na imię?"
-                  value={recipientName}
-                  onChange={(e) => setRecipientName(e.target.value)}
-                  className="pl-10"
-                  maxLength={100}
-                  required
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">
-                Krótka wiadomość (opcjonalne)
-              </label>
-              <div className="relative">
-                <MessageSquare className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
-                <Textarea
-                  placeholder="Napisz coś do Podróżnika..."
-                  value={recipientMessage}
-                  onChange={(e) => setRecipientMessage(e.target.value)}
-                  className="pl-10"
-                  rows={3}
-                  maxLength={500}
-                />
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">{recipientMessage.length}/500</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">
-                Email (opcjonalnie, jeśli chcesz nawiązać kontakt)
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  type="email"
-                  placeholder="twoj@email.com"
-                  value={recipientEmail}
-                  onChange={(e) => setRecipientEmail(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Podanie emaila oznacza chęć kontaktu z Podróżnikiem
-              </p>
-            </div>
-
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Rejestrowanie...</>
-              ) : (
-                <><CheckCircle className="w-4 h-4 mr-2" />Zarejestruj kartkę</>
-              )}
-            </Button>
-          </form>
-        </div>
-
-        <p className="text-center text-xs text-muted-foreground mt-4">
-          <a href="/" className="hover:text-foreground transition-colors">podrozowka.pl</a> — Kartki z Polski dla świata
-        </p>
-      </motion.div>
-    </div>
-  );
+  return <RegisterPostcardForm postcard={postcard} onSubmit={handleSubmit} />;
 };
 
 export default RegisterPostcard;
