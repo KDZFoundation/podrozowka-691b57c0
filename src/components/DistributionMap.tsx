@@ -170,6 +170,22 @@ const DistributionMap = () => {
       zoomToBoundsOnClick: true,
     }).addTo(map);
 
+    // Tooltip on cluster hover
+    layer.on("clustermouseover", (e: any) => {
+      const cluster = e.layer;
+      const count = cluster.getChildCount();
+      const label = count === 1 ? "Podróżówka" : count < 5 ? "Podróżówki" : "Podróżówek";
+      cluster.bindTooltip(`${count} ${label}`, {
+        direction: "top",
+        className: "cluster-tooltip",
+        offset: [0, -10],
+      }).openTooltip();
+    });
+
+    layer.on("clustermouseout", (e: any) => {
+      e.layer.closeTooltip();
+    });
+
     mapRef.current = map;
     markersLayerRef.current = layer;
 
