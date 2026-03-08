@@ -171,6 +171,7 @@ const AdminPanel = () => {
 
   const tabs = [
     { id: 'overview', label: 'Przegląd', icon: BarChart3 },
+    { id: 'orders', label: 'Zamówienia', icon: ShoppingCart },
     { id: 'inventory', label: 'Magazyn fizyczny', icon: Box },
     { id: 'postcards', label: 'Kartki (legacy)', icon: Package },
     { id: 'registrations', label: 'Rejestracje QR', icon: QrCode },
