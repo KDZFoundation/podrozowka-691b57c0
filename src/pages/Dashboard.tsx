@@ -4,6 +4,7 @@ import { User, Package, ArrowLeft, Loader2, Shield, ShoppingCart, Truck } from "
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import UserStats from "@/components/dashboard/UserStats";
+import RankCard from "@/components/dashboard/RankCard";
 import MyPostcards from "@/components/dashboard/MyPostcards";
 import MyOrders from "@/components/dashboard/MyOrders";
 import MyShipments from "@/components/dashboard/MyShipments";
