@@ -178,7 +178,45 @@ const AdminOrders = () => {
     }
   };
 
-  const filteredOrders = orders.filter((o) => {
+  const fetchReservedUnits = async (orderId: string) => {
+    const { data } = await supabase
+      .from("inventory_units")
+      .select("id, internal_inventory_code, fulfillment_status, card_design_id, card_designs!inner(title, view_no, countries!inner(name_pl))")
+      .eq("order_id", orderId);
+    setReservedUnits(
+      (data || []).map((u: any) => ({
+        id: u.id,
+        code: u.internal_inventory_code,
+        fulfillment: u.fulfillment_status,
+        design: `V${u.card_designs?.view_no} ${u.card_designs?.title || ""}`,
+        country: u.card_designs?.countries?.name_pl,
+      }))
+    );
+  };
+
+  const reserveInventory = async (orderId: string) => {
+    setReserving(true);
+    setReserveError(null);
+    setShortages([]);
+
+    const { data, error } = await supabase.rpc("reserve_inventory_for_order", { _order_id: orderId });
+
+    if (error) {
+      setReserveError(error.message);
+      toast({ title: "Błąd rezerwacji", description: error.message, variant: "destructive" });
+    } else if (data && !(data as any).success) {
+      const result = data as any;
+      setReserveError(result.error);
+      if (result.shortages) setShortages(result.shortages);
+      toast({ title: "Nie udało się zarezerwować", description: result.error, variant: "destructive" });
+    } else {
+      toast({ title: "Sztuki zarezerwowane pomyślnie!" });
+      fetchReservedUnits(orderId);
+      fetchDetail(orderId);
+    }
+    setReserving(false);
+  };
+
     if (!search) return true;
     const q = search.toLowerCase();
     return (
