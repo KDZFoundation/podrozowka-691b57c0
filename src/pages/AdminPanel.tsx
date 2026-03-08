@@ -79,7 +79,7 @@ const AdminPanel = () => {
       supabase.from('postcards').select('*', { count: 'exact', head: true }).eq('status', 'purchased'),
       supabase.from('postcards').select('*', { count: 'exact', head: true }).eq('status', 'registered'),
       supabase.from('countries').select('*', { count: 'exact', head: true }),
-      supabase.from('designs').select('*', { count: 'exact', head: true }),
+      supabase.from('card_designs').select('*', { count: 'exact', head: true }),
     ]);
 
     setStats({
