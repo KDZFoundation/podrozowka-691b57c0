@@ -145,7 +145,10 @@ const DistributionMap = () => {
       zoom: 3,
       zoomControl: true,
       scrollWheelZoom: true,
-      worldCopyJump: true,
+      worldCopyJump: false,
+      maxBounds: [[-85, -180], [85, 180]],
+      maxBoundsViscosity: 1.0,
+      minZoom: 2,
     });
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
