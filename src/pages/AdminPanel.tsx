@@ -17,6 +17,7 @@ import {
   UserCheck,
   Clock,
   Wrench,
+  Map as MapIcon,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,9 +30,11 @@ import AdminShipments from "@/components/admin/AdminShipments";
 import AdminRegistrations from "@/components/admin/AdminRegistrations";
 import AdminEventLog from "@/components/admin/AdminEventLog";
 import AdminDevTools from "@/components/admin/AdminDevTools";
+import AdminGlobalMap from "@/components/admin/AdminGlobalMap";
 
 type TabId =
   | "overview"
+  | "map"
   | "countries"
   | "card-designs"
   | "inventory"
@@ -127,6 +130,7 @@ const AdminPanel = () => {
 
   const tabs: { id: TabId; label: string; icon: typeof Package }[] = [
     { id: "overview", label: "Przegląd", icon: BarChart3 },
+    { id: "map", label: "Mapa Globalna", icon: MapIcon },
     { id: "countries", label: "Kraje", icon: Globe2 },
     { id: "card-designs", label: "Wzory kartek", icon: Image },
     { id: "inventory", label: "Magazyn", icon: Box },
@@ -206,6 +210,7 @@ const AdminPanel = () => {
           </div>
         )}
 
+        {activeTab === "map" && <AdminGlobalMap />}
         {activeTab === "countries" && <AdminCountries />}
         {activeTab === "card-designs" && <AdminCardDesigns />}
         {activeTab === "inventory" && <AdminInventory />}
