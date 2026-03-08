@@ -64,13 +64,13 @@ const PostcardPreview = () => {
 
               {/* Back of card */}
               <div 
-                className="absolute inset-0 rounded-xl overflow-hidden shadow-elevated"
+                className="absolute inset-0 rounded-xl overflow-hidden shadow-elevated bg-white"
                 style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
               >
                 <img 
                   src={projektTylImage} 
                   alt="Podróżówka - tył karty"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                 />
               </div>
             </motion.div>
