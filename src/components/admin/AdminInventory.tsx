@@ -367,7 +367,7 @@ const AdminInventory = () => {
               {isLoading ? (
                 <tr><td colSpan={10} className="p-8 text-center"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" /></td></tr>
               ) : filteredUnits.length === 0 ? (
-                <tr><td colSpan={10} className="p-8 text-center text-muted-foreground">Brak wyników</td></tr>
+                <tr><td colSpan={11} className="p-8 text-center text-muted-foreground">Brak wyników</td></tr>
               ) : (
                 filteredUnits.map((u) => (
                   <tr key={u.id} className="border-b border-border/50 hover:bg-muted/30">
