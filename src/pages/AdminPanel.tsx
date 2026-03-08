@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Package, Globe2, QrCode, BarChart3, ArrowLeft,
-  Loader2, CheckCircle, ShoppingBag, Box, Image, ShoppingCart, Truck, UserCheck, Clock
+  Loader2, CheckCircle, ShoppingBag, Box, Image, ShoppingCart, Truck, UserCheck, Clock, Wrench
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,8 +15,9 @@ import AdminQrJobs from "@/components/admin/AdminQrJobs";
 import AdminShipments from "@/components/admin/AdminShipments";
 import AdminRegistrations from "@/components/admin/AdminRegistrations";
 import AdminEventLog from "@/components/admin/AdminEventLog";
+import AdminDevTools from "@/components/admin/AdminDevTools";
 
-type TabId = 'overview' | 'countries' | 'card-designs' | 'inventory' | 'orders' | 'shipments' | 'qr-jobs' | 'registrations' | 'event-log';
+type TabId = 'overview' | 'countries' | 'card-designs' | 'inventory' | 'orders' | 'shipments' | 'qr-jobs' | 'registrations' | 'event-log' | 'dev-tools';
 
 interface AdminStats {
   totalUnits: number;
@@ -94,6 +95,7 @@ const AdminPanel = () => {
     { id: 'qr-jobs', label: 'Druk QR', icon: QrCode },
     { id: 'registrations', label: 'Rejestracje', icon: UserCheck },
     { id: 'event-log', label: 'Log zdarzeń', icon: Clock },
+    { id: 'dev-tools', label: 'Narzędzia Dev', icon: Wrench },
   ];
 
   const overviewCards = [
@@ -159,6 +161,7 @@ const AdminPanel = () => {
         {activeTab === 'qr-jobs' && <AdminQrJobs />}
         {activeTab === 'registrations' && <AdminRegistrations />}
         {activeTab === 'event-log' && <AdminEventLog />}
+        {activeTab === 'dev-tools' && <AdminDevTools />}
       </main>
     </div>
   );
