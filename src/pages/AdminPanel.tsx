@@ -289,6 +289,9 @@ const AdminPanel = () => {
             </div>
           </div>
         )}
+
+        {activeTab === 'countries' && <AdminCountries />}
+        {activeTab === 'card-designs' && <AdminCardDesigns />}
       </main>
     </div>
   );
