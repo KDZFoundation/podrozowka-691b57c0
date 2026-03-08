@@ -380,6 +380,22 @@ const AdminInventory = () => {
                     <td className="p-3 text-xs text-muted-foreground">{formatDate(u.qr_generated_at)}</td>
                     <td className="p-3 text-xs text-muted-foreground">{formatDate(u.shipped_at)}</td>
                     <td className="p-3 text-xs text-muted-foreground">{formatDate(u.registered_at)}</td>
+                    <td className="p-3">
+                      {u.fulfillment_status !== 'voided' && u.fulfillment_status !== 'damaged' && (
+                        <div className="flex gap-1">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleVoid(u.id); }}
+                            className="px-2 py-0.5 rounded text-xs font-medium bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
+                            title="Unieważnij"
+                          >Unieważnij</button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDamaged(u.id); }}
+                            className="px-2 py-0.5 rounded text-xs font-medium bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
+                            title="Uszkodzona"
+                          >Uszkodzona</button>
+                        </div>
+                      )}
+                    </td>
                   </tr>
                 ))
               )}
