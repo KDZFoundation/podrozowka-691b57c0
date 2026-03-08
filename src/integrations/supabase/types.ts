@@ -179,7 +179,9 @@ export type Database = {
           country: string | null
           created_at: string
           display_name: string | null
+          first_name: string | null
           id: string
+          last_name: string | null
           postcards_purchased: number
           postcards_received: number
           updated_at: string
@@ -192,7 +194,9 @@ export type Database = {
           country?: string | null
           created_at?: string
           display_name?: string | null
+          first_name?: string | null
           id?: string
+          last_name?: string | null
           postcards_purchased?: number
           postcards_received?: number
           updated_at?: string
@@ -205,10 +209,30 @@ export type Database = {
           country?: string | null
           created_at?: string
           display_name?: string | null
+          first_name?: string | null
           id?: string
+          last_name?: string | null
           postcards_purchased?: number
           postcards_received?: number
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
         Relationships: []
@@ -219,10 +243,17 @@ export type Database = {
     }
     Functions: {
       generate_tracking_code: { Args: never; Returns: string }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       update_country_count: { Args: never; Returns: undefined }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "traveler" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -349,6 +380,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["traveler", "admin"],
+    },
   },
 } as const
