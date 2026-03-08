@@ -26,6 +26,7 @@ export interface PostcardInfo {
 const RegisterPostcard = () => {
   const { qrToken } = useParams<{ qrToken: string }>();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [postcard, setPostcard] = useState<PostcardInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
