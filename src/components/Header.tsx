@@ -3,6 +3,7 @@ import { Menu, X, Globe, LogIn, LogOut, User, LayoutDashboard } from "lucide-rea
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import NotificationsBell from "@/components/NotificationsBell";
 
 const languages = [
   { code: "pl", name: "Polski" },
