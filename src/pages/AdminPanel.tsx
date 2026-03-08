@@ -14,6 +14,7 @@ import AdminCardDesigns from "@/components/admin/AdminCardDesigns";
 import AdminInventory from "@/components/admin/AdminInventory";
 import AdminOrders from "@/components/admin/AdminOrders";
 import AdminQrJobs from "@/components/admin/AdminQrJobs";
+import AdminShipments from "@/components/admin/AdminShipments";
 
 
 interface PostcardRow {
