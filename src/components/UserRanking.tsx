@@ -1,5 +1,6 @@
-import { motion } from "framer-motion";
-import { Trophy, Medal, Award, Heart, Globe2, Sparkles } from "lucide-react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Trophy, Medal, Award, Heart, Globe2, Sparkles, Users, TrendingUp } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
@@ -10,21 +11,34 @@ interface RankedUser {
   avatar_url: string | null;
   total_points: number;
   current_rank: string;
+  unitCount: number;
+  regCount: number;
   countries: { iso2: string; name_pl: string }[];
 }
 
-const RANK_STYLE: Record<string, { badgeClass: string }> = {
-  Zwiadowca: { badgeClass: "bg-muted text-muted-foreground border-border" },
-  Ambasador: { badgeClass: "bg-[hsl(var(--gold))]/10 text-[hsl(var(--gold))] border-[hsl(var(--gold))]/30" },
-  "Misjonarz Kultury": { badgeClass: "bg-accent/10 text-accent border-accent/30" },
-  "Legenda Podróżówki": { badgeClass: "bg-[hsl(var(--gold))]/15 text-[hsl(var(--gold))] border-[hsl(var(--gold))]/40" },
+const RANK_STYLE: Record<string, { badgeClass: string; glow: string }> = {
+  Zwiadowca: {
+    badgeClass: "bg-muted text-muted-foreground border-border",
+    glow: "",
+  },
+  Ambasador: {
+    badgeClass: "bg-[hsl(var(--gold))]/10 text-[hsl(var(--gold))] border-[hsl(var(--gold))]/30",
+    glow: "shadow-[0_0_12px_hsl(var(--gold)/0.15)]",
+  },
+  "Misjonarz Kultury": {
+    badgeClass: "bg-accent/10 text-accent border-accent/30",
+    glow: "shadow-[0_0_12px_hsl(var(--accent)/0.15)]",
+  },
+  "Legenda Podróżówki": {
+    badgeClass: "bg-[hsl(var(--gold))]/15 text-[hsl(var(--gold))] border-[hsl(var(--gold))]/40",
+    glow: "shadow-[0_0_20px_hsl(var(--gold)/0.25)]",
+  },
 };
 
 const FLAG_URL = (iso2: string) =>
   `https://flagcdn.com/w40/${iso2.toLowerCase()}.png`;
 
 const fetchRanking = async (): Promise<RankedUser[]> => {
-  // Get top users by total_points
   const { data: profiles, error } = await supabase
     .from("profiles")
     .select("user_id, display_name, avatar_url, total_points, current_rank")
@@ -35,26 +49,57 @@ const fetchRanking = async (): Promise<RankedUser[]> => {
   if (error) throw error;
   if (!profiles || profiles.length === 0) return [];
 
-  // For each user, get their unique countries from inventory_units → card_designs → countries
   const userIds = profiles.map((p) => p.user_id);
 
+  // Fetch units with country info
   const { data: units } = await supabase
     .from("inventory_units")
-    .select("traveler_user_id, card_designs!inner(country_id, countries!inner(iso2, name_pl))")
+    .select("id, traveler_user_id, card_designs!inner(country_id, countries!inner(iso2, name_pl))")
     .in("traveler_user_id", userIds);
 
-  // Build country map per user
+  // Build per-user maps
   const userCountryMap = new Map<string, Map<string, { iso2: string; name_pl: string }>>();
+  const userUnitCount = new Map<string, number>();
+  const userUnitIds = new Map<string, string[]>();
+
   (units || []).forEach((u: any) => {
     const uid = u.traveler_user_id;
+    if (!uid) return;
+
+    userUnitCount.set(uid, (userUnitCount.get(uid) || 0) + 1);
+    if (!userUnitIds.has(uid)) userUnitIds.set(uid, []);
+    userUnitIds.get(uid)!.push(u.id);
+
     const country = u.card_designs?.countries;
-    if (!uid || !country) return;
+    if (!country) return;
     if (!userCountryMap.has(uid)) userCountryMap.set(uid, new Map());
     userCountryMap.get(uid)!.set(country.iso2, { iso2: country.iso2, name_pl: country.name_pl });
   });
 
+  // Fetch registration counts per user (batch)
+  const allUnitIds = (units || []).map((u: any) => u.id);
+  const { data: regs } = allUnitIds.length > 0
+    ? await supabase
+        .from("recipient_registrations")
+        .select("inventory_unit_id")
+        .in("inventory_unit_id", allUnitIds)
+    : { data: [] };
+
+  // Map reg counts per user
+  const userRegCount = new Map<string, number>();
+  (regs || []).forEach((r: any) => {
+    for (const [uid, ids] of userUnitIds.entries()) {
+      if (ids.includes(r.inventory_unit_id)) {
+        userRegCount.set(uid, (userRegCount.get(uid) || 0) + 1);
+        break;
+      }
+    }
+  });
+
   return profiles.map((p) => ({
     ...p,
+    unitCount: userUnitCount.get(p.user_id) || 0,
+    regCount: userRegCount.get(p.user_id) || 0,
     countries: Array.from(userCountryMap.get(p.user_id)?.values() ?? []),
   }));
 };
@@ -66,14 +111,16 @@ const UserRanking = () => {
     refetchInterval: 60_000,
   });
 
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+
   const getRankIcon = (index: number) => {
     switch (index) {
       case 0:
         return <Trophy className="w-6 h-6 text-[hsl(var(--gold))]" />;
       case 1:
-        return <Medal className="w-6 h-6 text-gray-400" />;
+        return <Medal className="w-6 h-6 text-muted-foreground" />;
       case 2:
-        return <Award className="w-6 h-6 text-amber-600" />;
+        return <Award className="w-6 h-6 text-[hsl(var(--gold))]" />;
       default:
         return (
           <span className="w-6 h-6 flex items-center justify-center text-sm font-bold text-muted-foreground">
@@ -86,11 +133,11 @@ const UserRanking = () => {
   const getRankBgColor = (index: number) => {
     switch (index) {
       case 0:
-        return "bg-[hsl(var(--gold))]/10 border-[hsl(var(--gold))]/30";
+        return "bg-[hsl(var(--gold))]/5 border-[hsl(var(--gold))]/20";
       case 1:
-        return "bg-gray-100 border-gray-300";
+        return "bg-muted/50 border-border";
       case 2:
-        return "bg-amber-50 border-amber-200";
+        return "bg-[hsl(var(--gold))]/3 border-[hsl(var(--gold))]/10";
       default:
         return "bg-card border-border";
     }
@@ -101,7 +148,7 @@ const UserRanking = () => {
       <section className="py-16 bg-secondary">
         <div className="container mx-auto px-4">
           <div className="text-center">
-            <div className="animate-pulse">Ładowanie rankingu...</div>
+            <div className="animate-pulse text-muted-foreground">Ładowanie rankingu...</div>
           </div>
         </div>
       </section>
@@ -166,6 +213,7 @@ const UserRanking = () => {
           {topUsers.map((user, index) => {
             const rankStyle = RANK_STYLE[user.current_rank] ?? RANK_STYLE.Zwiadowca;
             const isLegend = user.current_rank === "Legenda Podróżówki";
+            const isHovered = hoveredId === user.user_id;
 
             return (
               <motion.div
@@ -174,75 +222,149 @@ const UserRanking = () => {
                 whileInView={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.4, delay: index * 0.08 }}
                 viewport={{ once: true }}
-                className={`flex items-center gap-4 p-4 mb-3 rounded-xl border transition-all hover:shadow-soft ${getRankBgColor(index)}`}
+                onMouseEnter={() => setHoveredId(user.user_id)}
+                onMouseLeave={() => setHoveredId(null)}
+                className={`relative p-4 mb-3 rounded-xl border transition-all duration-300 cursor-default ${getRankBgColor(index)} ${
+                  isHovered ? `shadow-soft ${rankStyle.glow} scale-[1.01]` : ""
+                }`}
               >
-                {/* Rank icon */}
-                <div className="flex-shrink-0">{getRankIcon(index)}</div>
+                <div className="flex items-center gap-4">
+                  {/* Rank icon */}
+                  <div className="flex-shrink-0">{getRankIcon(index)}</div>
 
-                {/* Avatar */}
-                <div className="flex-shrink-0">
-                  {user.avatar_url ? (
-                    <img
-                      src={user.avatar_url}
-                      alt={user.display_name || "Użytkownik"}
-                      className="w-12 h-12 rounded-full object-cover border-2 border-background"
-                    />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-lg font-bold text-primary">
-                        {(user.display_name || "U")[0].toUpperCase()}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Name + badge + flags */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-semibold text-foreground truncate">
-                      {user.display_name || "Anonim"}
-                    </p>
-                    <Badge className={`text-[10px] px-2 py-0 ${rankStyle.badgeClass}`}>
-                      {isLegend && <Sparkles className="w-3 h-3 mr-1" />}
-                      {user.current_rank}
-                    </Badge>
+                  {/* Avatar */}
+                  <div className="flex-shrink-0">
+                    {user.avatar_url ? (
+                      <img
+                        src={user.avatar_url}
+                        alt={user.display_name || "Użytkownik"}
+                        className="w-12 h-12 rounded-full object-cover border-2 border-background"
+                      />
+                    ) : (
+                      <div
+                        className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                          isLegend ? "bg-[hsl(var(--gold))]/10" : "bg-primary/10"
+                        }`}
+                      >
+                        <span
+                          className={`text-lg font-bold ${
+                            isLegend ? "text-[hsl(var(--gold))]" : "text-primary"
+                          }`}
+                        >
+                          {(user.display_name || "U")[0].toUpperCase()}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Country flags */}
-                  {user.countries.length > 0 && (
-                    <div className="flex items-center gap-1.5 mt-1.5">
-                      <Globe2 className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-                      <div className="flex items-center gap-1 flex-wrap">
-                        {user.countries.slice(0, 8).map((c) => (
-                          <img
-                            key={c.iso2}
-                            src={FLAG_URL(c.iso2)}
-                            alt={c.name_pl}
-                            title={c.name_pl}
-                            className="w-5 h-3.5 rounded-[2px] object-cover shadow-sm"
-                          />
-                        ))}
-                        {user.countries.length > 8 && (
-                          <span className="text-[10px] text-muted-foreground ml-0.5">
-                            +{user.countries.length - 8}
-                          </span>
-                        )}
-                      </div>
+                  {/* Name + badge + flags */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-semibold text-foreground truncate">
+                        {user.display_name || "Anonim"}
+                      </p>
+                      <Badge
+                        className={`text-[10px] px-2 py-0 leading-4 ${rankStyle.badgeClass}`}
+                      >
+                        {isLegend && <Sparkles className="w-3 h-3 mr-1" />}
+                        {user.current_rank}
+                      </Badge>
                     </div>
-                  )}
+
+                    {/* Country flags */}
+                    {user.countries.length > 0 && (
+                      <div className="flex items-center gap-1.5 mt-1.5">
+                        <Globe2 className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                        <div className="flex items-center gap-1 flex-wrap">
+                          {user.countries.slice(0, 6).map((c) => (
+                            <img
+                              key={c.iso2}
+                              src={FLAG_URL(c.iso2)}
+                              alt={c.name_pl}
+                              title={c.name_pl}
+                              className="w-5 h-3.5 rounded-[2px] object-cover shadow-sm"
+                            />
+                          ))}
+                          {user.countries.length > 6 && (
+                            <span className="text-[10px] text-muted-foreground ml-0.5">
+                              +{user.countries.length - 6}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Points + country count */}
+                  <div className="flex-shrink-0 text-right">
+                    <p
+                      className={`font-display text-xl font-bold ${
+                        isLegend ? "text-[hsl(var(--gold))]" : "text-primary"
+                      }`}
+                    >
+                      {user.total_points.toLocaleString("pl-PL")}
+                    </p>
+                    <div className="flex items-center justify-end gap-1 mt-0.5">
+                      <Globe2
+                        className={`w-3 h-3 ${
+                          isLegend ? "text-[hsl(var(--gold))]" : "text-accent"
+                        }`}
+                      />
+                      <span className="text-xs text-muted-foreground">
+                        {user.countries.length} {user.countries.length === 1 ? "kraj" : user.countries.length < 5 ? "kraje" : "krajów"}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Points */}
-                <div className="flex-shrink-0 text-right">
-                  <p
-                    className={`font-display text-xl font-bold ${
-                      isLegend ? "text-[hsl(var(--gold))]" : "text-primary"
-                    }`}
-                  >
-                    {user.total_points.toLocaleString("pl-PL")}
-                  </p>
-                  <p className="text-xs text-muted-foreground">punktów</p>
-                </div>
+                {/* Hover tooltip — cultural impact summary */}
+                <AnimatePresence>
+                  {isHovered && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                      animate={{ opacity: 1, height: "auto", marginTop: 12 }}
+                      exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
+                      className="overflow-hidden"
+                    >
+                      <div
+                        className={`rounded-lg p-3 grid grid-cols-3 gap-3 text-center ${
+                          isLegend
+                            ? "bg-[hsl(var(--gold))]/5 border border-[hsl(var(--gold))]/10"
+                            : "bg-muted/60"
+                        }`}
+                      >
+                        <div>
+                          <div className="flex items-center justify-center gap-1 mb-1">
+                            <TrendingUp className="w-3.5 h-3.5 text-primary" />
+                          </div>
+                          <p className="font-display text-sm font-bold text-foreground">
+                            {user.unitCount}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">Kartek</p>
+                        </div>
+                        <div>
+                          <div className="flex items-center justify-center gap-1 mb-1">
+                            <Globe2 className="w-3.5 h-3.5 text-accent" />
+                          </div>
+                          <p className="font-display text-sm font-bold text-foreground">
+                            {user.countries.length}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">Krajów</p>
+                        </div>
+                        <div>
+                          <div className="flex items-center justify-center gap-1 mb-1">
+                            <Users className="w-3.5 h-3.5 text-[hsl(var(--gold))]" />
+                          </div>
+                          <p className="font-display text-sm font-bold text-foreground">
+                            {user.regCount}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">Relacji</p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             );
           })}
