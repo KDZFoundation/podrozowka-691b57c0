@@ -1,0 +1,399 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Loader2, Search, Plus, Package } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+interface InventoryUnit {
+  id: string;
+  internal_inventory_code: string;
+  business_status: string | null;
+  fulfillment_status: string;
+  traveler_user_id: string | null;
+  order_id: string | null;
+  public_claim_code: string | null;
+  qr_generated_at: string | null;
+  shipped_at: string | null;
+  registered_at: string | null;
+  created_at: string;
+  card_design_id: string;
+  stock_batch_id: string;
+  design_title: string | null;
+  country_name: string | null;
+  view_no: number | null;
+  batch_name: string | null;
+}
+
+interface CountryOption {
+  id: string;
+  name_pl: string;
+}
+
+interface DesignOption {
+  id: string;
+  title: string | null;
+  view_no: number;
+  country_id: string;
+}
+
+const FULFILLMENT_LABELS: Record<string, string> = {
+  in_stock: "W magazynie",
+  reserved: "Zarezerwowana",
+  qr_generated: "QR wygenerowany",
+  qr_applied: "QR naklejony",
+  shipped: "Wysłana",
+  voided: "Anulowana",
+  damaged: "Uszkodzona",
+};
+
+const BUSINESS_LABELS: Record<string, string> = {
+  purchased: "Kupiona",
+  registered: "Zarejestrowana",
+};
+
+const PAGE_SIZE = 50;
+
+const AdminInventory = () => {
+  const { toast } = useToast();
+  const [units, setUnits] = useState<InventoryUnit[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [countryFilter, setCountryFilter] = useState("all");
+  const [fulfillmentFilter, setFulfillmentFilter] = useState("all");
+  const [businessFilter, setBusinessFilter] = useState("all");
+  const [page, setPage] = useState(0);
+
+  const [countries, setCountries] = useState<CountryOption[]>([]);
+  const [designs, setDesigns] = useState<DesignOption[]>([]);
+
+  // Init batch dialog
+  const [showInitDialog, setShowInitDialog] = useState(false);
+  const [initDesignId, setInitDesignId] = useState("");
+  const [initQuantity, setInitQuantity] = useState("5000");
+  const [initBatchName, setInitBatchName] = useState("");
+  const [isInitializing, setIsInitializing] = useState(false);
+
+  useEffect(() => {
+    fetchFilters();
+  }, []);
+
+  useEffect(() => {
+    fetchUnits();
+  }, [countryFilter, fulfillmentFilter, businessFilter, page]);
+
+  const fetchFilters = async () => {
+    const [{ data: c }, { data: d }] = await Promise.all([
+      supabase.from("countries").select("id, name_pl").order("name_pl"),
+      supabase.from("card_designs").select("id, title, view_no, country_id").order("view_no"),
+    ]);
+    if (c) setCountries(c);
+    if (d) setDesigns(d);
+  };
+
+  const fetchUnits = async () => {
+    setIsLoading(true);
+
+    let query = supabase
+      .from("inventory_units")
+      .select(`
+        id, internal_inventory_code, business_status, fulfillment_status,
+        traveler_user_id, order_id, public_claim_code,
+        qr_generated_at, shipped_at, registered_at, created_at,
+        card_design_id, stock_batch_id,
+        card_designs!inner(title, view_no, countries!inner(name_pl))
+      `)
+      .order("created_at", { ascending: false })
+      .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+
+    if (fulfillmentFilter !== "all") {
+      query = query.eq("fulfillment_status", fulfillmentFilter);
+    }
+    if (businessFilter !== "all") {
+      query = query.eq("business_status", businessFilter);
+    }
+    if (countryFilter !== "all") {
+      query = query.eq("card_designs.countries.id", countryFilter);
+    }
+
+    const { data, error } = await query;
+
+    if (!error && data) {
+      setUnits(
+        data.map((u: any) => ({
+          id: u.id,
+          internal_inventory_code: u.internal_inventory_code,
+          business_status: u.business_status,
+          fulfillment_status: u.fulfillment_status,
+          traveler_user_id: u.traveler_user_id,
+          order_id: u.order_id,
+          public_claim_code: u.public_claim_code,
+          qr_generated_at: u.qr_generated_at,
+          shipped_at: u.shipped_at,
+          registered_at: u.registered_at,
+          created_at: u.created_at,
+          card_design_id: u.card_design_id,
+          stock_batch_id: u.stock_batch_id,
+          design_title: u.card_designs?.title,
+          country_name: u.card_designs?.countries?.name_pl,
+          view_no: u.card_designs?.view_no,
+          batch_name: null,
+        }))
+      );
+    }
+    setIsLoading(false);
+  };
+
+  const filteredUnits = units.filter((u) => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return (
+      u.internal_inventory_code.toLowerCase().includes(q) ||
+      u.public_claim_code?.toLowerCase().includes(q) ||
+      u.order_id?.toLowerCase().includes(q) ||
+      u.country_name?.toLowerCase().includes(q) ||
+      u.design_title?.toLowerCase().includes(q)
+    );
+  });
+
+  const initializeBatch = async () => {
+    if (!initDesignId || !initBatchName) {
+      toast({ title: "Uzupełnij nazwę partii i wybierz wzór", variant: "destructive" });
+      return;
+    }
+
+    const qty = parseInt(initQuantity);
+    if (isNaN(qty) || qty < 1 || qty > 10000) {
+      toast({ title: "Ilość musi być między 1 a 10000", variant: "destructive" });
+      return;
+    }
+
+    setIsInitializing(true);
+
+    // Create batch
+    const { data: batch, error: batchError } = await supabase
+      .from("stock_batches")
+      .insert({
+        name: initBatchName,
+        card_design_id: initDesignId,
+        quantity: qty,
+      })
+      .select("id")
+      .single();
+
+    if (batchError || !batch) {
+      toast({ title: "Błąd tworzenia partii", description: batchError?.message, variant: "destructive" });
+      setIsInitializing(false);
+      return;
+    }
+
+    // Generate units in chunks of 500
+    const design = designs.find((d) => d.id === initDesignId);
+    const country = countries.find((c) => c.id === design?.country_id);
+    const prefix = `${country?.name_pl?.slice(0, 3).toUpperCase() || "XXX"}-V${design?.view_no || 0}`;
+
+    const CHUNK = 500;
+    let created = 0;
+
+    for (let i = 0; i < qty; i += CHUNK) {
+      const chunk = Math.min(CHUNK, qty - i);
+      const rows = Array.from({ length: chunk }, (_, j) => ({
+        stock_batch_id: batch.id,
+        card_design_id: initDesignId,
+        internal_inventory_code: `${prefix}-${String(i + j + 1).padStart(5, "0")}`,
+        fulfillment_status: "in_stock" as const,
+      }));
+
+      const { error } = await supabase.from("inventory_units").insert(rows);
+      if (error) {
+        toast({
+          title: `Błąd po ${created} sztukach`,
+          description: error.message,
+          variant: "destructive",
+        });
+        setIsInitializing(false);
+        return;
+      }
+      created += chunk;
+    }
+
+    toast({ title: `Utworzono ${created} sztuk w partii "${initBatchName}"` });
+    setShowInitDialog(false);
+    setInitBatchName("");
+    setInitQuantity("5000");
+    setInitDesignId("");
+    setIsInitializing(false);
+    fetchUnits();
+  };
+
+  const formatDate = (d: string | null) =>
+    d ? new Date(d).toLocaleDateString("pl-PL", { day: "numeric", month: "short", year: "numeric" }) : "—";
+
+  const fulfillmentBadge = (status: string) => {
+    const colors: Record<string, string> = {
+      in_stock: "bg-muted text-muted-foreground",
+      reserved: "bg-[hsl(var(--gold))]/15 text-[hsl(var(--gold))]",
+      qr_generated: "bg-primary/15 text-primary",
+      qr_applied: "bg-primary/25 text-primary",
+      shipped: "bg-accent/15 text-accent",
+      voided: "bg-destructive/15 text-destructive",
+      damaged: "bg-destructive/25 text-destructive",
+    };
+    return (
+      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${colors[status] || "bg-muted text-muted-foreground"}`}>
+        {FULFILLMENT_LABELS[status] || status}
+      </span>
+    );
+  };
+
+  const businessBadge = (status: string | null) => {
+    if (!status) return <span className="text-xs text-muted-foreground">—</span>;
+    const colors: Record<string, string> = {
+      purchased: "bg-[hsl(var(--gold))]/15 text-[hsl(var(--gold))]",
+      registered: "bg-accent/15 text-accent",
+    };
+    return (
+      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${colors[status] || ""}`}>
+        {BUSINESS_LABELS[status] || status}
+      </span>
+    );
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-3 items-center justify-between">
+        <h2 className="font-display text-xl font-bold text-foreground">Magazyn fizyczny</h2>
+        <Button onClick={() => setShowInitDialog(true)} size="sm" className="gap-2">
+          <Plus className="w-4 h-4" /> Nowa partia
+        </Button>
+      </div>
+
+      {/* Init batch dialog */}
+      {showInitDialog && (
+        <div className="bg-card border border-border rounded-xl p-6 space-y-4">
+          <h3 className="font-display text-lg font-semibold">Inicjalizacja partii magazynowej</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">Nazwa partii</label>
+              <Input value={initBatchName} onChange={(e) => setInitBatchName(e.target.value)} placeholder="np. Partia PL-01" />
+            </div>
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">Wzór kartki</label>
+              <Select value={initDesignId} onValueChange={setInitDesignId}>
+                <SelectTrigger><SelectValue placeholder="Wybierz wzór" /></SelectTrigger>
+                <SelectContent>
+                  {designs.map((d) => {
+                    const c = countries.find((co) => co.id === d.country_id);
+                    return (
+                      <SelectItem key={d.id} value={d.id}>
+                        {c?.name_pl} — Widok {d.view_no} {d.title ? `(${d.title})` : ""}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">Ilość sztuk</label>
+              <Input type="number" value={initQuantity} onChange={(e) => setInitQuantity(e.target.value)} min={1} max={10000} />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={initializeBatch} disabled={isInitializing}>
+              {isInitializing ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Tworzę...</> : <><Package className="w-4 h-4 mr-2" /> Utwórz partię</>}
+            </Button>
+            <Button variant="outline" onClick={() => setShowInitDialog(false)} disabled={isInitializing}>Anuluj</Button>
+          </div>
+        </div>
+      )}
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-3 items-center">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input placeholder="Szukaj po kodzie, QR, zamówieniu..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+        </div>
+        <Select value={countryFilter} onValueChange={(v) => { setCountryFilter(v); setPage(0); }}>
+          <SelectTrigger className="w-[160px]"><SelectValue placeholder="Kraj" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Wszystkie kraje</SelectItem>
+            {countries.map((c) => <SelectItem key={c.id} value={c.id}>{c.name_pl}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={fulfillmentFilter} onValueChange={(v) => { setFulfillmentFilter(v); setPage(0); }}>
+          <SelectTrigger className="w-[180px]"><SelectValue placeholder="Realizacja" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Wszystkie statusy</SelectItem>
+            {Object.entries(FULFILLMENT_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={businessFilter} onValueChange={(v) => { setBusinessFilter(v); setPage(0); }}>
+          <SelectTrigger className="w-[160px]"><SelectValue placeholder="Biznesowy" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Wszystkie</SelectItem>
+            <SelectItem value="purchased">Kupiona</SelectItem>
+            <SelectItem value="registered">Zarejestrowana</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Table */}
+      <div className="bg-card rounded-xl shadow-soft overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="text-left p-3 font-medium text-muted-foreground">Kod</th>
+                <th className="text-left p-3 font-medium text-muted-foreground">Kraj</th>
+                <th className="text-left p-3 font-medium text-muted-foreground">Wzór</th>
+                <th className="text-left p-3 font-medium text-muted-foreground">Realizacja</th>
+                <th className="text-left p-3 font-medium text-muted-foreground">Biznesowy</th>
+                <th className="text-left p-3 font-medium text-muted-foreground">Claim code</th>
+                <th className="text-left p-3 font-medium text-muted-foreground">Zamówienie</th>
+                <th className="text-left p-3 font-medium text-muted-foreground">QR gen.</th>
+                <th className="text-left p-3 font-medium text-muted-foreground">Wysłano</th>
+                <th className="text-left p-3 font-medium text-muted-foreground">Rejestracja</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <tr><td colSpan={10} className="p-8 text-center"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" /></td></tr>
+              ) : filteredUnits.length === 0 ? (
+                <tr><td colSpan={10} className="p-8 text-center text-muted-foreground">Brak wyników</td></tr>
+              ) : (
+                filteredUnits.map((u) => (
+                  <tr key={u.id} className="border-b border-border/50 hover:bg-muted/30">
+                    <td className="p-3 font-mono text-xs">{u.internal_inventory_code}</td>
+                    <td className="p-3">{u.country_name || "—"}</td>
+                    <td className="p-3 text-muted-foreground">V{u.view_no} {u.design_title || ""}</td>
+                    <td className="p-3">{fulfillmentBadge(u.fulfillment_status)}</td>
+                    <td className="p-3">{businessBadge(u.business_status)}</td>
+                    <td className="p-3 font-mono text-xs">{u.public_claim_code || "—"}</td>
+                    <td className="p-3 font-mono text-xs">{u.order_id || "—"}</td>
+                    <td className="p-3 text-xs text-muted-foreground">{formatDate(u.qr_generated_at)}</td>
+                    <td className="p-3 text-xs text-muted-foreground">{formatDate(u.shipped_at)}</td>
+                    <td className="p-3 text-xs text-muted-foreground">{formatDate(u.registered_at)}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+        <div className="flex items-center justify-between p-3 border-t border-border">
+          <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>Poprzednia</Button>
+          <span className="text-xs text-muted-foreground">Strona {page + 1}</span>
+          <Button variant="outline" size="sm" disabled={filteredUnits.length < PAGE_SIZE} onClick={() => setPage((p) => p + 1)}>Następna</Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AdminInventory;
