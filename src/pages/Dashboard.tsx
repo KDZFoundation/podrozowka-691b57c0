@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Package, ArrowLeft, Loader2, Shield, ShoppingCart, Truck } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import UserStats from "@/components/dashboard/UserStats";
 import RankCard from "@/components/dashboard/RankCard";
@@ -66,26 +65,6 @@ const Dashboard = () => {
 
   if (!user) return null;
 
-  // Fetch gamification breakdown for RankCard
-  const { data: gamifData } = useQuery({
-    queryKey: ['rank-card-stats', user.id],
-    queryFn: async () => {
-      const { data: units } = await supabase
-        .from('inventory_units')
-        .select('id, card_design_id, card_designs!inner(country_id)')
-        .eq('traveler_user_id', user.id);
-
-      const { count: regCount } = await supabase
-        .from('recipient_registrations')
-        .select('id', { count: 'exact', head: true })
-        .in('inventory_unit_id', (units || []).map((u: any) => u.id));
-
-      const countrySet = new Set((units || []).map((u: any) => u.card_designs?.country_id).filter(Boolean));
-      return { uniqueCountries: countrySet.size, registeredRelations: regCount || 0 };
-    },
-    enabled: !!user,
-  });
-
   const tabs = [
     { id: 'overview', label: 'Przegląd', icon: User },
     { id: 'my-orders', label: 'Moje zamówienia', icon: ShoppingCart },
@@ -136,12 +115,7 @@ const Dashboard = () => {
       </div>
 
       <main className="container mx-auto px-4 py-8 space-y-6">
-        <RankCard
-          totalPoints={profile?.total_points ?? 0}
-          currentRank={profile?.current_rank ?? 'Zwiadowca'}
-          uniqueCountries={gamifData?.uniqueCountries ?? 0}
-          registeredRelations={gamifData?.registeredRelations ?? 0}
-        />
+        <RankCard userId={user.id} />
         {activeTab === 'overview' && <UserStats profile={profile} userId={user.id} />}
         {activeTab === 'my-orders' && <MyOrders userId={user.id} />}
         {activeTab === 'my-shipments' && <MyShipments userId={user.id} />}

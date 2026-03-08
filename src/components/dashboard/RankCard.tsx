@@ -1,20 +1,15 @@
-import { motion, useMotionValue, useTransform, animate } from "framer-motion";
+import { motion, animate } from "framer-motion";
 import { Award, Globe2, Users, ChevronRight, Sparkles } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { useEffect, useState } from "react";
-
-interface RankCardProps {
-  totalPoints: number;
-  currentRank: string;
-  uniqueCountries: number;
-  registeredRelations: number;
-}
+import { useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const RANK_TIERS = [
-  { name: "Zwiadowca", min: 0, max: 499, accent: "muted-foreground", bg: "bg-muted", ring: "ring-border", gradient: "" },
-  { name: "Ambasador", min: 500, max: 2499, accent: "[hsl(var(--gold))]", bg: "bg-[hsl(var(--gold))]/10", ring: "ring-[hsl(var(--gold))]", gradient: "from-[hsl(var(--gold))] to-[hsl(var(--gold-light))]" },
-  { name: "Misjonarz Kultury", min: 2500, max: 7499, accent: "accent", bg: "bg-accent/10", ring: "ring-accent", gradient: "from-accent to-[hsl(var(--forest-light))]" },
-  { name: "Legenda Podróżówki", min: 7500, max: Infinity, accent: "[hsl(var(--gold))]", bg: "bg-[hsl(var(--gold))]/5", ring: "ring-[hsl(var(--gold))]", gradient: "from-[hsl(var(--gold))] via-[hsl(var(--warm-white))] to-[hsl(var(--gold))]" },
+  { name: "Zwiadowca", min: 0, accent: "muted-foreground", bg: "bg-muted", ring: "ring-border" },
+  { name: "Ambasador", min: 500, accent: "[hsl(var(--gold))]", bg: "bg-[hsl(var(--gold))]/10", ring: "ring-[hsl(var(--gold))]" },
+  { name: "Misjonarz Kultury", min: 2500, accent: "accent", bg: "bg-accent/10", ring: "ring-accent" },
+  { name: "Legenda Podróżówki", min: 7500, accent: "[hsl(var(--gold))]", bg: "bg-[hsl(var(--gold))]/5", ring: "ring-[hsl(var(--gold))]" },
 ];
 
 function getTier(rank: string) {
@@ -28,21 +23,73 @@ function getNextTier(rank: string) {
 
 function AnimatedCounter({ value }: { value: number }) {
   const [display, setDisplay] = useState(0);
+  const prevValue = useRef(0);
 
   useEffect(() => {
-    const motionVal = useMotionValue(0);
-    const unsubscribe = motionVal.on("change", (v) => setDisplay(Math.round(v)));
-    animate(motionVal, value, { duration: 1.4, ease: "easeOut" });
-    return () => {
-      unsubscribe();
-      motionVal.destroy();
-    };
+    const controls = animate(prevValue.current, value, {
+      duration: 1.4,
+      ease: "easeOut",
+      onUpdate: (v) => setDisplay(Math.round(v)),
+    });
+    prevValue.current = value;
+    return () => controls.stop();
   }, [value]);
 
   return <>{display.toLocaleString("pl-PL")}</>;
 }
 
-const RankCard = ({ totalPoints, currentRank, uniqueCountries, registeredRelations }: RankCardProps) => {
+interface RankCardProps {
+  userId: string;
+}
+
+const fetchRankData = async (userId: string) => {
+  // Fetch profile gamification fields
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("total_points, current_rank")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  // Fetch unique countries & registration count
+  const { data: units } = await supabase
+    .from("inventory_units")
+    .select("id, card_designs!inner(country_id)")
+    .eq("traveler_user_id", userId);
+
+  const unitIds = (units || []).map((u: any) => u.id);
+  const countrySet = new Set(
+    (units || []).map((u: any) => u.card_designs?.country_id).filter(Boolean)
+  );
+
+  let regCount = 0;
+  if (unitIds.length > 0) {
+    const { count } = await supabase
+      .from("recipient_registrations")
+      .select("id", { count: "exact", head: true })
+      .in("inventory_unit_id", unitIds);
+    regCount = count || 0;
+  }
+
+  return {
+    totalPoints: profile?.total_points ?? 0,
+    currentRank: (profile?.current_rank as string) ?? "Zwiadowca",
+    uniqueCountries: countrySet.size,
+    registeredRelations: regCount,
+  };
+};
+
+const RankCard = ({ userId }: RankCardProps) => {
+  const { data, isLoading } = useQuery({
+    queryKey: ["rank-card", userId],
+    queryFn: () => fetchRankData(userId),
+    refetchInterval: 30_000,
+  });
+
+  const totalPoints = data?.totalPoints ?? 0;
+  const currentRank = data?.currentRank ?? "Zwiadowca";
+  const uniqueCountries = data?.uniqueCountries ?? 0;
+  const registeredRelations = data?.registeredRelations ?? 0;
+
   const tier = getTier(currentRank);
   const nextTier = getNextTier(currentRank);
   const isLegend = !nextTier;
@@ -52,6 +99,16 @@ const RankCard = ({ totalPoints, currentRank, uniqueCountries, registeredRelatio
     : 100;
 
   const pointsToNext = nextTier ? nextTier.min - totalPoints : 0;
+
+  if (isLoading) {
+    return (
+      <div className="rounded-2xl bg-card shadow-soft p-8 animate-pulse">
+        <div className="h-6 w-40 bg-muted rounded mb-4" />
+        <div className="h-10 w-28 bg-muted rounded mb-4" />
+        <div className="h-2.5 w-full bg-muted rounded-full" />
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -90,9 +147,11 @@ const RankCard = ({ totalPoints, currentRank, uniqueCountries, registeredRelatio
               )}
             </div>
             <div>
-              <p className={`text-xs font-medium uppercase tracking-widest ${
-                isLegend ? "text-[hsl(var(--gold))]" : "text-muted-foreground"
-              }`}>
+              <p
+                className={`text-xs font-medium uppercase tracking-widest ${
+                  isLegend ? "text-[hsl(var(--gold))]" : "text-muted-foreground"
+                }`}
+              >
                 Twoja ranga
               </p>
               <h2
@@ -129,7 +188,11 @@ const RankCard = ({ totalPoints, currentRank, uniqueCountries, registeredRelatio
               value={progressValue}
               className={`h-2.5 ${isLegend ? "bg-white/10" : "bg-muted"}`}
             />
-            <p className={`text-xs mt-2 ${isLegend ? "text-[hsl(var(--gold))]/60" : "text-muted-foreground"}`}>
+            <p
+              className={`text-xs mt-2 ${
+                isLegend ? "text-[hsl(var(--gold))]/60" : "text-muted-foreground"
+              }`}
+            >
               Jeszcze <span className="font-semibold">{pointsToNext}</span> punktów do rangi{" "}
               <span className="font-semibold">{nextTier.name}</span>
             </p>
@@ -144,54 +207,88 @@ const RankCard = ({ totalPoints, currentRank, uniqueCountries, registeredRelatio
         )}
 
         {/* Cultural Impact Score */}
-        <div className={`rounded-xl p-5 ${
-          isLegend ? "bg-white/5 ring-1 ring-[hsl(var(--gold))]/10" : "bg-muted/50"
-        }`}>
-          <p className={`text-xs font-medium uppercase tracking-widest mb-1 ${
-            isLegend ? "text-[hsl(var(--gold))]/70" : "text-muted-foreground"
-          }`}>
+        <div
+          className={`rounded-xl p-5 ${
+            isLegend ? "bg-white/5 ring-1 ring-[hsl(var(--gold))]/10" : "bg-muted/50"
+          }`}
+        >
+          <p
+            className={`text-xs font-medium uppercase tracking-widest mb-1 ${
+              isLegend ? "text-[hsl(var(--gold))]/70" : "text-muted-foreground"
+            }`}
+          >
             Twój Wpływ Kulturowy
           </p>
           <div className="flex items-baseline gap-2 mb-4">
-            <span className={`font-display text-4xl md:text-5xl font-bold ${
-              isLegend ? "text-[hsl(var(--gold-light))]" : `text-${tier.accent}`
-            }`}>
+            <span
+              className={`font-display text-4xl md:text-5xl font-bold ${
+                isLegend ? "text-[hsl(var(--gold-light))]" : `text-${tier.accent}`
+              }`}
+            >
               <AnimatedCounter value={totalPoints} />
             </span>
-            <span className={`text-sm ${isLegend ? "text-[hsl(var(--gold))]/60" : "text-muted-foreground"}`}>
+            <span
+              className={`text-sm ${
+                isLegend ? "text-[hsl(var(--gold))]/60" : "text-muted-foreground"
+              }`}
+            >
               punktów
             </span>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div className={`flex items-center gap-2 rounded-lg p-3 ${
-              isLegend ? "bg-white/5" : "bg-card"
-            }`}>
-              <Globe2 className={`w-4 h-4 flex-shrink-0 ${
-                isLegend ? "text-[hsl(var(--gold))]" : "text-primary"
-              }`} />
+            <div
+              className={`flex items-center gap-2 rounded-lg p-3 ${
+                isLegend ? "bg-white/5" : "bg-card"
+              }`}
+            >
+              <Globe2
+                className={`w-4 h-4 flex-shrink-0 ${
+                  isLegend ? "text-[hsl(var(--gold))]" : "text-primary"
+                }`}
+              />
               <div>
-                <p className={`font-display text-lg font-bold ${
-                  isLegend ? "text-[hsl(var(--warm-white))]" : "text-foreground"
-                }`}>{uniqueCountries}</p>
-                <p className={`text-xs ${
-                  isLegend ? "text-[hsl(var(--gold))]/60" : "text-muted-foreground"
-                }`}>Obsłużone kraje</p>
+                <p
+                  className={`font-display text-lg font-bold ${
+                    isLegend ? "text-[hsl(var(--warm-white))]" : "text-foreground"
+                  }`}
+                >
+                  {uniqueCountries}
+                </p>
+                <p
+                  className={`text-xs ${
+                    isLegend ? "text-[hsl(var(--gold))]/60" : "text-muted-foreground"
+                  }`}
+                >
+                  Globalny zasięg
+                </p>
               </div>
             </div>
-            <div className={`flex items-center gap-2 rounded-lg p-3 ${
-              isLegend ? "bg-white/5" : "bg-card"
-            }`}>
-              <Users className={`w-4 h-4 flex-shrink-0 ${
-                isLegend ? "text-[hsl(var(--gold))]" : "text-accent"
-              }`} />
+            <div
+              className={`flex items-center gap-2 rounded-lg p-3 ${
+                isLegend ? "bg-white/5" : "bg-card"
+              }`}
+            >
+              <Users
+                className={`w-4 h-4 flex-shrink-0 ${
+                  isLegend ? "text-[hsl(var(--gold))]" : "text-accent"
+                }`}
+              />
               <div>
-                <p className={`font-display text-lg font-bold ${
-                  isLegend ? "text-[hsl(var(--warm-white))]" : "text-foreground"
-                }`}>{registeredRelations}</p>
-                <p className={`text-xs ${
-                  isLegend ? "text-[hsl(var(--gold))]/60" : "text-muted-foreground"
-                }`}>Zarejestrowane relacje</p>
+                <p
+                  className={`font-display text-lg font-bold ${
+                    isLegend ? "text-[hsl(var(--warm-white))]" : "text-foreground"
+                  }`}
+                >
+                  {registeredRelations}
+                </p>
+                <p
+                  className={`text-xs ${
+                    isLegend ? "text-[hsl(var(--gold))]/60" : "text-muted-foreground"
+                  }`}
+                >
+                  Relacje
+                </p>
               </div>
             </div>
           </div>
