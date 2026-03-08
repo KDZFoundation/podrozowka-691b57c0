@@ -17,6 +17,7 @@ import {
   UserCheck,
   Clock,
   Wrench,
+  Map as MapIcon,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
