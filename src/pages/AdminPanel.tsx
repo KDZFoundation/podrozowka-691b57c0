@@ -3,12 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Package, Globe2, Users, QrCode, BarChart3, ArrowLeft,
-  Loader2, Search, Filter, CheckCircle, ShoppingBag, Box
+  Loader2, Search, Filter, CheckCircle, ShoppingBag, Box, Image
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import AdminCountries from "@/components/admin/AdminCountries";
+import AdminCardDesigns from "@/components/admin/AdminCardDesigns";
 
 interface PostcardRow {
   id: string;
