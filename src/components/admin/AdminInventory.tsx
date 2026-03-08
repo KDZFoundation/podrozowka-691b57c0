@@ -360,6 +360,7 @@ const AdminInventory = () => {
                 <th className="text-left p-3 font-medium text-muted-foreground">QR gen.</th>
                 <th className="text-left p-3 font-medium text-muted-foreground">Wysłano</th>
                 <th className="text-left p-3 font-medium text-muted-foreground">Rejestracja</th>
+                <th className="text-left p-3 font-medium text-muted-foreground">Akcje</th>
               </tr>
             </thead>
             <tbody>
