@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { User, Package, ArrowLeft, Loader2, Shield, ShoppingCart, Truck } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import useRealtimeNotifications from "@/hooks/useRealtimeNotifications";
 import UserStats from "@/components/dashboard/UserStats";
 import RankCard from "@/components/dashboard/RankCard";
 import MyPostcards from "@/components/dashboard/MyPostcards";
