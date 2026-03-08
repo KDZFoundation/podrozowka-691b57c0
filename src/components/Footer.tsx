@@ -1,4 +1,5 @@
 import { Heart, Instagram, Facebook, Mail } from "lucide-react";
+import logo from "@/assets/logo.jpg";
 
 const Footer = () => {
   return (
@@ -7,7 +8,7 @@ const Footer = () => {
         <div className="grid md:grid-cols-4 gap-8 mb-12">
           {/* Brand */}
           <div className="md:col-span-2">
-            <h3 className="font-display text-2xl font-bold mb-4">Podróżówka</h3>
+            <img src={logo} alt="Podróżówka" className="h-10 w-auto mb-4" />
             <p className="text-primary-foreground/70 mb-4 max-w-md">
               Odwrócona pocztówka z Polski. Podziękuj osobom spotkanym w podróży 
               i pokaż im piękno naszego kraju.
