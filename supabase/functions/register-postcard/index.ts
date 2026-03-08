@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
         .from('postcards')
         .select(`
           id, status, buyer_display_name, registered_at, recipient_name,
-          designs!inner(view_name, image_url, countries!inner(name, flag, language_name))
+          card_designs!inner(title, image_front_url, countries!inner(name_pl, iso2))
         `)
         .eq('qr_token', qr_token)
         .maybeSingle();
@@ -49,11 +49,10 @@ Deno.serve(async (req) => {
         registered_at: postcard.registered_at,
         recipient_name: postcard.recipient_name,
         design: {
-          view_name: (postcard as any).designs?.view_name,
-          image_url: (postcard as any).designs?.image_url,
-          country_name: (postcard as any).designs?.countries?.name,
-          country_flag: (postcard as any).designs?.countries?.flag,
-          language_name: (postcard as any).designs?.countries?.language_name,
+          title: (postcard as any).card_designs?.title,
+          image_front_url: (postcard as any).card_designs?.image_front_url,
+          country_name: (postcard as any).card_designs?.countries?.name_pl,
+          country_iso2: (postcard as any).card_designs?.countries?.iso2,
         },
       }), {
         status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -24,7 +24,7 @@ const CommunityGallery = () => {
         .from('postcards')
         .select(`
           id, buyer_display_name, recipient_name, recipient_message, registered_at,
-          designs!inner(view_name, countries!inner(name, flag))
+          card_designs!inner(title, countries!inner(name_pl, iso2))
         `)
         .eq('status', 'registered')
         .order('registered_at', { ascending: false })
@@ -37,9 +37,9 @@ const CommunityGallery = () => {
           recipient_name: p.recipient_name,
           recipient_message: p.recipient_message,
           registered_at: p.registered_at,
-          country_name: p.designs?.countries?.name || null,
-          country_flag: p.designs?.countries?.flag || null,
-          design_view_name: p.designs?.view_name || null,
+          country_name: p.card_designs?.countries?.name_pl || null,
+          country_flag: null,
+          design_view_name: p.card_designs?.title || null,
         }));
         setPostcards(enriched);
       }

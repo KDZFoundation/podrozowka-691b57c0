@@ -14,60 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
-      countries: {
+      card_designs: {
         Row: {
-          code: string
+          active: boolean
+          country_id: string
           created_at: string
-          flag: string | null
           id: string
+          image_front_url: string | null
           language_code: string
-          language_name: string
-          name: string
+          thank_you_text: string | null
+          title: string | null
+          view_no: number
         }
         Insert: {
-          code: string
+          active?: boolean
+          country_id: string
           created_at?: string
-          flag?: string | null
           id?: string
-          language_code: string
-          language_name: string
-          name: string
-        }
-        Update: {
-          code?: string
-          created_at?: string
-          flag?: string | null
-          id?: string
+          image_front_url?: string | null
           language_code?: string
-          language_name?: string
-          name?: string
-        }
-        Relationships: []
-      }
-      designs: {
-        Row: {
-          country_id: string
-          created_at: string
-          id: string
-          image_url: string | null
-          sort_order: number
-          view_name: string
-        }
-        Insert: {
-          country_id: string
-          created_at?: string
-          id?: string
-          image_url?: string | null
-          sort_order?: number
-          view_name: string
+          thank_you_text?: string | null
+          title?: string | null
+          view_no: number
         }
         Update: {
+          active?: boolean
           country_id?: string
           created_at?: string
           id?: string
-          image_url?: string | null
-          sort_order?: number
-          view_name?: string
+          image_front_url?: string | null
+          language_code?: string
+          thank_you_text?: string | null
+          title?: string | null
+          view_no?: number
         }
         Relationships: [
           {
@@ -78,6 +57,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      countries: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          iso2: string
+          iso3: string | null
+          name_pl: string
+          slug: string | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          iso2: string
+          iso3?: string | null
+          name_pl: string
+          slug?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          iso2?: string
+          iso3?: string | null
+          name_pl?: string
+          slug?: string | null
+        }
+        Relationships: []
       }
       platform_stats: {
         Row: {
@@ -166,7 +175,7 @@ export type Database = {
             foreignKeyName: "postcards_design_id_fkey"
             columns: ["design_id"]
             isOneToOne: false
-            referencedRelation: "designs"
+            referencedRelation: "card_designs"
             referencedColumns: ["id"]
           },
         ]

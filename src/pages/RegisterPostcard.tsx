@@ -14,11 +14,10 @@ interface PostcardInfo {
   recipient_name: string | null;
   registered_at: string | null;
   design: {
-    view_name: string;
-    image_url: string | null;
+    title: string;
+    image_front_url: string | null;
     country_name: string;
-    country_flag: string;
-    language_name: string;
+    country_iso2: string;
   };
 }
 
@@ -165,7 +164,7 @@ const RegisterPostcard = () => {
             Ta Podróżówka została zarejestrowana przez <strong>{postcard.recipient_name}</strong>.
           </p>
           <p className="text-sm text-muted-foreground mb-6">
-            {postcard.design.country_flag} {postcard.design.country_name} — {postcard.design.view_name}
+            {postcard.design.country_name} — {postcard.design.title}
           </p>
           <a href="/" className="text-primary hover:underline">Dowiedz się więcej o Podróżówce</a>
         </motion.div>
@@ -203,12 +202,12 @@ const RegisterPostcard = () => {
         <div className="bg-card rounded-2xl p-6 md:p-8 shadow-soft">
           {/* Header */}
           <div className="text-center mb-6">
-            <span className="text-4xl mb-2 block">{postcard.design.country_flag}</span>
+            <span className="text-4xl mb-2 block">🇵🇱</span>
             <h1 className="font-display text-2xl font-bold text-foreground mb-1">
               Masz Podróżówkę!
             </h1>
             <p className="text-muted-foreground">
-              {postcard.design.country_name} — {postcard.design.view_name}
+              {postcard.design.country_name} — {postcard.design.title}
             </p>
             <p className="text-sm text-muted-foreground mt-2">
               Od: <strong className="text-foreground">{postcard.buyer_display_name || "Podróżnik"}</strong>

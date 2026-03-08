@@ -3,12 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Package, Globe2, Users, QrCode, BarChart3, ArrowLeft,
-  Loader2, Search, Filter, CheckCircle, ShoppingBag, Box
+  Loader2, Search, Filter, CheckCircle, ShoppingBag, Box, Image
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import AdminCountries from "@/components/admin/AdminCountries";
+import AdminCardDesigns from "@/components/admin/AdminCardDesigns";
 
 interface PostcardRow {
   id: string;
@@ -38,7 +40,7 @@ const AdminPanel = () => {
   const { user, isLoading: authLoading, isAdmin } = useAuth();
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'postcards' | 'registrations'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'postcards' | 'registrations' | 'countries' | 'card-designs'>('overview');
   const [stats, setStats] = useState<AdminStats>({ total: 0, available: 0, purchased: 0, registered: 0, countries: 0, designs: 0 });
   const [postcards, setPostcards] = useState<PostcardRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -79,7 +81,7 @@ const AdminPanel = () => {
       supabase.from('postcards').select('*', { count: 'exact', head: true }).eq('status', 'purchased'),
       supabase.from('postcards').select('*', { count: 'exact', head: true }).eq('status', 'registered'),
       supabase.from('countries').select('*', { count: 'exact', head: true }),
-      supabase.from('designs').select('*', { count: 'exact', head: true }),
+      supabase.from('card_designs').select('*', { count: 'exact', head: true }),
     ]);
 
     setStats({
@@ -99,7 +101,7 @@ const AdminPanel = () => {
       .select(`
         id, serial_number, qr_token, status, buyer_display_name,
         purchased_at, recipient_name, registered_at, order_reference,
-        designs!inner(view_name, countries!inner(name, flag))
+        card_designs!inner(title, countries!inner(name_pl, iso2))
       `)
       .order('created_at', { ascending: false })
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
@@ -123,9 +125,9 @@ const AdminPanel = () => {
         recipient_name: p.recipient_name,
         registered_at: p.registered_at,
         order_reference: p.order_reference,
-        design_view_name: p.designs?.view_name,
-        country_name: p.designs?.countries?.name,
-        country_flag: p.designs?.countries?.flag,
+        design_view_name: p.card_designs?.title,
+        country_name: p.card_designs?.countries?.name_pl,
+        country_flag: null,
       })));
     }
   };
@@ -168,6 +170,8 @@ const AdminPanel = () => {
     { id: 'overview', label: 'Przegląd', icon: BarChart3 },
     { id: 'postcards', label: 'Magazyn kartek', icon: Package },
     { id: 'registrations', label: 'Rejestracje QR', icon: QrCode },
+    { id: 'countries', label: 'Kraje', icon: Globe2 },
+    { id: 'card-designs', label: 'Wzory kartek', icon: Image },
   ];
 
   return (
@@ -285,6 +289,9 @@ const AdminPanel = () => {
             </div>
           </div>
         )}
+
+        {activeTab === 'countries' && <AdminCountries />}
+        {activeTab === 'card-designs' && <AdminCardDesigns />}
       </main>
     </div>
   );
