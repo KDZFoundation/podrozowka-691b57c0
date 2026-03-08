@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Package, ArrowLeft, Loader2 } from "lucide-react";
+import { User, Package, ArrowLeft, Loader2, Shield } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import UserStats from "@/components/dashboard/UserStats";
@@ -9,6 +9,8 @@ import MyPostcards from "@/components/dashboard/MyPostcards";
 interface Profile {
   id: string;
   display_name: string | null;
+  first_name: string | null;
+  last_name: string | null;
   avatar_url: string | null;
   country: string | null;
   city: string | null;
@@ -17,7 +19,7 @@ interface Profile {
 }
 
 const Dashboard = () => {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -40,24 +42,12 @@ const Dashboard = () => {
         .maybeSingle();
 
       if (!error && data) {
-        setProfile(data);
-      } else if (!data) {
-        const { data: newProfile, error: createError } = await supabase
-          .from('profiles')
-          .insert({ user_id: user.id })
-          .select()
-          .single();
-
-        if (!createError && newProfile) {
-          setProfile(newProfile);
-        }
+        setProfile(data as Profile);
       }
       setIsLoading(false);
     };
 
-    if (user) {
-      fetchProfile();
-    }
+    if (user) fetchProfile();
   }, [user]);
 
   if (authLoading || isLoading) {
@@ -87,13 +77,18 @@ const Dashboard = () => {
               <span className="font-display text-xl font-semibold text-foreground">Panel Podróżówka</span>
             </div>
             <div className="flex items-center gap-3">
+              {isAdmin && (
+                <a href="/admin" className="flex items-center gap-1 px-3 py-1.5 bg-primary/10 text-primary rounded-lg text-sm font-medium hover:bg-primary/20 transition-colors">
+                  <Shield className="w-4 h-4" />Admin
+                </a>
+              )}
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-medium text-foreground">{profile?.display_name || user.email}</p>
                 <p className="text-xs text-muted-foreground">{profile?.postcards_purchased || 0} zakupionych</p>
               </div>
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <User className="w-5 h-5 text-primary" />
-              </div>
+              <button onClick={signOut} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+                Wyloguj
+              </button>
             </div>
           </div>
         </div>
