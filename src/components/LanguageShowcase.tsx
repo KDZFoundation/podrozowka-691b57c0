@@ -35,7 +35,7 @@ const LanguageShowcase = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <span className="inline-block px-3 py-1 bg-polish-red/10 text-primary rounded-full text-sm font-medium mb-4">
-            16 języków
+            50 krajów
           </span>
           <h2 className="font-display text-3xl md:text-5xl font-bold text-foreground mb-4">
             Podziękuj w każdym języku

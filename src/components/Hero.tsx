@@ -60,8 +60,8 @@ const Hero = () => {
               <p className="text-sm text-primary-foreground/70 mt-1">języków</p>
             </div>
             <div className="text-center">
-              <p className="font-display text-3xl md:text-4xl font-bold text-primary-foreground">32</p>
-              <p className="text-sm text-primary-foreground/70 mt-1">wzory</p>
+              <p className="font-display text-3xl md:text-4xl font-bold text-primary-foreground">10</p>
+              <p className="text-sm text-primary-foreground/70 mt-1">wzorów</p>
             </div>
             <div className="text-center">
               <p className="font-display text-3xl md:text-4xl font-bold text-primary-foreground">2k+</p>
