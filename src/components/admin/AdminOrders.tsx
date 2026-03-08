@@ -217,6 +217,7 @@ const AdminOrders = () => {
     setReserving(false);
   };
 
+  const filteredOrders = orders.filter((o) => {
     if (!search) return true;
     const q = search.toLowerCase();
     return (
