@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Search, Plus, Package } from "lucide-react";
+import { Loader2, Search, Plus, Package, ArrowLeft, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface InventoryUnit {
