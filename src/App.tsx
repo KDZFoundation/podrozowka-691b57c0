@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import RegisterPostcard from "./pages/RegisterPostcard";
 import AdminPanel from "./pages/AdminPanel";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
