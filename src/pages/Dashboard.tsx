@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import UserStats from "@/components/dashboard/UserStats";
 import MyPostcards from "@/components/dashboard/MyPostcards";
 import MyOrders from "@/components/dashboard/MyOrders";
+import MyShipments from "@/components/dashboard/MyShipments";
 
 interface Profile {
   id: string;
