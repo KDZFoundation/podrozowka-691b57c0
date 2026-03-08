@@ -99,7 +99,7 @@ const AdminPanel = () => {
       .select(`
         id, serial_number, qr_token, status, buyer_display_name,
         purchased_at, recipient_name, registered_at, order_reference,
-        designs!inner(view_name, countries!inner(name, flag))
+        card_designs!inner(title, countries!inner(name_pl, iso2))
       `)
       .order('created_at', { ascending: false })
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
