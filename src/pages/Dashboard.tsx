@@ -25,7 +25,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'my-postcards' | 'my-orders'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'my-postcards' | 'my-orders' | 'my-shipments'>('overview');
 
   useEffect(() => {
     if (!authLoading && !user) {
