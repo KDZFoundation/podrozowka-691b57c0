@@ -114,6 +114,7 @@ const Dashboard = () => {
       <main className="container mx-auto px-4 py-8">
         {activeTab === 'overview' && <UserStats profile={profile} userId={user.id} />}
         {activeTab === 'my-orders' && <MyOrders userId={user.id} />}
+        {activeTab === 'my-shipments' && <MyShipments userId={user.id} />}
         {activeTab === 'my-postcards' && <MyPostcards userId={user.id} />}
       </main>
     </div>
