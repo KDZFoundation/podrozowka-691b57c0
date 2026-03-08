@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, QrCode, Printer, ArrowLeft, Eye, Plus } from "lucide-react";
+import { Loader2, QrCode, Printer, ArrowLeft, Eye, Plus, Download, CheckCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface PrintJob {
