@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { CheckCircle, Loader2, AlertCircle, Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 import RegisterPostcardForm from "@/components/register/RegisterPostcardForm";
 import RegisterPostcardSuccess from "@/components/register/RegisterPostcardSuccess";
 import RegisterPostcardAlreadyRegistered from "@/components/register/RegisterPostcardAlreadyRegistered";
