@@ -14,6 +14,71 @@ export type Database = {
   }
   public: {
     Tables: {
+      countries: {
+        Row: {
+          code: string
+          created_at: string
+          flag: string | null
+          id: string
+          language_code: string
+          language_name: string
+          name: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          flag?: string | null
+          id?: string
+          language_code: string
+          language_name: string
+          name: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          flag?: string | null
+          id?: string
+          language_code?: string
+          language_name?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      designs: {
+        Row: {
+          country_id: string
+          created_at: string
+          id: string
+          image_url: string | null
+          sort_order: number
+          view_name: string
+        }
+        Insert: {
+          country_id: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          sort_order?: number
+          view_name: string
+        }
+        Update: {
+          country_id?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          sort_order?: number
+          view_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "designs_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_stats: {
         Row: {
           id: string
@@ -21,6 +86,7 @@ export type Database = {
           total_given: number
           total_members: number
           total_purchased: number
+          total_registered: number
           updated_at: string
         }
         Insert: {
@@ -29,6 +95,7 @@ export type Database = {
           total_given?: number
           total_members?: number
           total_purchased?: number
+          total_registered?: number
           updated_at?: string
         }
         Update: {
@@ -37,69 +104,72 @@ export type Database = {
           total_given?: number
           total_members?: number
           total_purchased?: number
+          total_registered?: number
           updated_at?: string
         }
         Relationships: []
       }
       postcards: {
         Row: {
+          buyer_display_name: string | null
+          buyer_id: string | null
           created_at: string
-          design_type: string
-          given_at: string | null
-          given_to_country: string | null
-          given_to_name: string | null
+          design_id: string
           id: string
-          language: string
-          latitude: number | null
-          longitude: number | null
-          message: string | null
-          owner_id: string
-          photo_url: string | null
-          received_at: string | null
-          receiver_id: string | null
+          order_reference: string | null
+          purchased_at: string | null
+          qr_token: string
+          recipient_email: string | null
+          recipient_message: string | null
+          recipient_name: string | null
+          registered_at: string | null
+          serial_number: number
           status: string
-          tracking_code: string
           updated_at: string
         }
         Insert: {
+          buyer_display_name?: string | null
+          buyer_id?: string | null
           created_at?: string
-          design_type?: string
-          given_at?: string | null
-          given_to_country?: string | null
-          given_to_name?: string | null
+          design_id: string
           id?: string
-          language: string
-          latitude?: number | null
-          longitude?: number | null
-          message?: string | null
-          owner_id: string
-          photo_url?: string | null
-          received_at?: string | null
-          receiver_id?: string | null
+          order_reference?: string | null
+          purchased_at?: string | null
+          qr_token: string
+          recipient_email?: string | null
+          recipient_message?: string | null
+          recipient_name?: string | null
+          registered_at?: string | null
+          serial_number: number
           status?: string
-          tracking_code: string
           updated_at?: string
         }
         Update: {
+          buyer_display_name?: string | null
+          buyer_id?: string | null
           created_at?: string
-          design_type?: string
-          given_at?: string | null
-          given_to_country?: string | null
-          given_to_name?: string | null
+          design_id?: string
           id?: string
-          language?: string
-          latitude?: number | null
-          longitude?: number | null
-          message?: string | null
-          owner_id?: string
-          photo_url?: string | null
-          received_at?: string | null
-          receiver_id?: string | null
+          order_reference?: string | null
+          purchased_at?: string | null
+          qr_token?: string
+          recipient_email?: string | null
+          recipient_message?: string | null
+          recipient_name?: string | null
+          registered_at?: string | null
+          serial_number?: number
           status?: string
-          tracking_code?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "postcards_design_id_fkey"
+            columns: ["design_id"]
+            isOneToOne: false
+            referencedRelation: "designs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -110,7 +180,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
-          postcards_given: number
+          postcards_purchased: number
           postcards_received: number
           updated_at: string
           user_id: string
@@ -123,7 +193,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
-          postcards_given?: number
+          postcards_purchased?: number
           postcards_received?: number
           updated_at?: string
           user_id: string
@@ -136,7 +206,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
-          postcards_given?: number
+          postcards_purchased?: number
           postcards_received?: number
           updated_at?: string
           user_id?: string
@@ -149,6 +219,7 @@ export type Database = {
     }
     Functions: {
       generate_tracking_code: { Args: never; Returns: string }
+      update_country_count: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
