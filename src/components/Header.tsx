@@ -3,6 +3,7 @@ import { Menu, X, Globe, LogIn, LogOut, User, LayoutDashboard } from "lucide-rea
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import NotificationsBell from "@/components/NotificationsBell";
 
 const languages = [
   { code: "pl", name: "Polski" },
@@ -69,17 +70,20 @@ const Header = () => {
               </select>
             </div>
 
-            {/* Dashboard button for logged in users */}
+            {/* Notifications + Dashboard for logged in users */}
             {!isLoading && user && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="hidden md:flex"
-                onClick={() => navigate("/dashboard")}
-              >
-                <LayoutDashboard className="w-4 h-4 mr-2" />
-                Mój Panel
-              </Button>
+              <>
+                <NotificationsBell />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="hidden md:flex"
+                  onClick={() => navigate("/dashboard")}
+                >
+                  <LayoutDashboard className="w-4 h-4 mr-2" />
+                  Mój Panel
+                </Button>
+              </>
             )}
 
             {/* Auth button */}
