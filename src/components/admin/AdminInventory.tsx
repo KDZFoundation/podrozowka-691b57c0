@@ -59,6 +59,24 @@ const BUSINESS_LABELS: Record<string, string> = {
   registered: "Zarejestrowana",
 };
 
+const EVENT_TYPE_LABELS: Record<string, string> = {
+  created_in_stock: "Utworzono w magazynie",
+  reserved_for_order: "Zarezerwowano",
+  qr_generated: "QR wygenerowany",
+  qr_applied: "QR naklejony",
+  shipped: "Wysłano",
+  registered: "Zarejestrowano",
+  voided: "Unieważniono",
+  damaged: "Uszkodzona",
+};
+
+const ACTOR_TYPE_LABELS: Record<string, string> = {
+  system: "System",
+  admin: "Admin",
+  traveler: "Podróżnik",
+  recipient: "Obdarowany",
+};
+
 const PAGE_SIZE = 50;
 
 const AdminInventory = () => {
