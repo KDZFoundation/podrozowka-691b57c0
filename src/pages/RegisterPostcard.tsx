@@ -101,6 +101,13 @@ const RegisterPostcard = () => {
 
     setIsSuccess(true);
     toast({ title: "Kartka zarejestrowana! 🎉" });
+
+    // Invalidate related queries so dashboard/stats refresh automatically
+    queryClient.invalidateQueries({ queryKey: ['platform-stats'] });
+    queryClient.invalidateQueries({ queryKey: ['community-gallery'] });
+    queryClient.invalidateQueries({ queryKey: ['user-ranking'] });
+    queryClient.invalidateQueries({ queryKey: ['postcards'] });
+    queryClient.invalidateQueries({ queryKey: ['user-stats'] });
   };
 
   if (isLoading) {
