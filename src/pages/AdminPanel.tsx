@@ -13,6 +13,7 @@ import AdminCountries from "@/components/admin/AdminCountries";
 import AdminCardDesigns from "@/components/admin/AdminCardDesigns";
 import AdminInventory from "@/components/admin/AdminInventory";
 import AdminOrders from "@/components/admin/AdminOrders";
+import AdminQrJobs from "@/components/admin/AdminQrJobs";
 
 
 interface PostcardRow {
@@ -43,7 +44,7 @@ const AdminPanel = () => {
   const { user, isLoading: authLoading, isAdmin } = useAuth();
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'postcards' | 'registrations' | 'countries' | 'card-designs' | 'inventory' | 'orders'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'postcards' | 'registrations' | 'countries' | 'card-designs' | 'inventory' | 'orders' | 'qr-jobs'>('overview');
   const [stats, setStats] = useState<AdminStats>({ total: 0, available: 0, purchased: 0, registered: 0, countries: 0, designs: 0 });
   const [postcards, setPostcards] = useState<PostcardRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -173,8 +174,8 @@ const AdminPanel = () => {
     { id: 'overview', label: 'Przegląd', icon: BarChart3 },
     { id: 'orders', label: 'Zamówienia', icon: ShoppingCart },
     { id: 'inventory', label: 'Magazyn fizyczny', icon: Box },
+    { id: 'qr-jobs', label: 'Druk QR', icon: QrCode },
     { id: 'postcards', label: 'Kartki (legacy)', icon: Package },
-    { id: 'registrations', label: 'Rejestracje QR', icon: QrCode },
     { id: 'countries', label: 'Kraje', icon: Globe2 },
     { id: 'card-designs', label: 'Wzory kartek', icon: Image },
   ];
@@ -299,6 +300,7 @@ const AdminPanel = () => {
         {activeTab === 'card-designs' && <AdminCardDesigns />}
         {activeTab === 'inventory' && <AdminInventory />}
         {activeTab === 'orders' && <AdminOrders />}
+        {activeTab === 'qr-jobs' && <AdminQrJobs />}
       </main>
     </div>
   );
