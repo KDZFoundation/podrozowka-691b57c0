@@ -79,12 +79,16 @@ const Auth = () => {
         }
       } else {
         const displayName = `${firstName} ${lastName}`.trim();
-        const { data, error } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/dashboard`,
-            data: { display_name: displayName },
+            data: {
+              display_name: displayName,
+              first_name: firstName,
+              last_name: lastName,
+            },
           },
         });
 
@@ -98,17 +102,7 @@ const Auth = () => {
             description,
             variant: "destructive",
           });
-        } else if (data.user) {
-          // Update profile with first/last name (trigger already created profile)
-          await supabase
-            .from('profiles')
-            .update({
-              first_name: firstName,
-              last_name: lastName,
-              display_name: displayName,
-            })
-            .eq('user_id', data.user.id);
-
+        } else {
           toast({ title: "Konto utworzone!", description: "Sprawdź email, aby potwierdzić konto." });
         }
       }
