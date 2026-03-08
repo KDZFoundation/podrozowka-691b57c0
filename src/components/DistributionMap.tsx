@@ -4,6 +4,9 @@ import { MapPin, Globe2 } from "lucide-react";
 import L from "leaflet";
 import { supabase } from "@/integrations/supabase/client";
 import "leaflet/dist/leaflet.css";
+import "leaflet.markercluster";
+import "leaflet.markercluster/dist/MarkerCluster.css";
+import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 
 // Fix for default marker icons in Leaflet with Vite
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
@@ -157,7 +160,11 @@ const DistributionMap = () => {
       maxZoom: 19,
     }).addTo(map);
 
-    const layer = L.layerGroup().addTo(map);
+    const layer = (L as any).markerClusterGroup({
+      maxClusterRadius: 40,
+      spiderfyOnMaxZoom: true,
+      showCoverageOnHover: false,
+    }).addTo(map);
 
     mapRef.current = map;
     markersLayerRef.current = layer;
