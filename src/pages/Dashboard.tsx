@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Package, ArrowLeft, Loader2, Shield, ShoppingCart } from "lucide-react";
+import { User, Package, ArrowLeft, Loader2, Shield, ShoppingCart, Truck } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import UserStats from "@/components/dashboard/UserStats";
