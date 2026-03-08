@@ -57,7 +57,7 @@ const CommunityGallery = () => {
         const reg = regMap.get(u.id);
         return {
           id: u.id,
-          traveler_name: u.traveler_user_id ? (profileMap.get(u.traveler_user_id) || "Podróżnik") : "Podróżnik",
+          traveler_name: u.traveler_user_id ? (profileMap.get(u.traveler_user_id) ?? "Podróżnik") as string : "Podróżnik",
           recipient_name: reg?.recipient_name || null,
           recipient_message: reg?.recipient_message || null,
           registered_at: u.registered_at,
