@@ -55,7 +55,7 @@ const Header = () => {
 
   const displayName =
     profile?.display_name ??
-    [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") ||
+    ([profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || null) ??
     user?.email ??
     "";
 
