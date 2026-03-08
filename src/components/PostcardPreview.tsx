@@ -73,7 +73,6 @@ const PostcardPreview = () => {
                   className="w-full h-full object-cover"
                 />
               </div>
-              </div>
             </motion.div>
 
             {/* Flip indicator */}
