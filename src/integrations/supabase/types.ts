@@ -790,6 +790,9 @@ export type Database = {
           avatar_url: string | null
           current_rank: string | null
           display_name: string | null
+          id: string | null
+          postcards_purchased: number | null
+          postcards_received: number | null
           total_kilometers: number | null
           total_points: number | null
           user_id: string | null
@@ -798,6 +801,9 @@ export type Database = {
           avatar_url?: string | null
           current_rank?: string | null
           display_name?: string | null
+          id?: string | null
+          postcards_purchased?: number | null
+          postcards_received?: number | null
           total_kilometers?: number | null
           total_points?: number | null
           user_id?: string | null
@@ -806,6 +812,9 @@ export type Database = {
           avatar_url?: string | null
           current_rank?: string | null
           display_name?: string | null
+          id?: string | null
+          postcards_purchased?: number | null
+          postcards_received?: number | null
           total_kilometers?: number | null
           total_points?: number | null
           user_id?: string | null
