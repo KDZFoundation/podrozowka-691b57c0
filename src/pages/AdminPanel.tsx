@@ -32,6 +32,7 @@ import AdminRegistrations from "@/components/admin/AdminRegistrations";
 import AdminEventLog from "@/components/admin/AdminEventLog";
 import AdminDevTools from "@/components/admin/AdminDevTools";
 import AdminGlobalMap from "@/components/admin/AdminGlobalMap";
+import AdminLab from "@/components/admin/AdminLab";
 
 type TabId =
   | "overview"
