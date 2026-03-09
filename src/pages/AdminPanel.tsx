@@ -18,6 +18,7 @@ import {
   Clock,
   Wrench,
   Map as MapIcon,
+  FlaskConical,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,6 +32,7 @@ import AdminRegistrations from "@/components/admin/AdminRegistrations";
 import AdminEventLog from "@/components/admin/AdminEventLog";
 import AdminDevTools from "@/components/admin/AdminDevTools";
 import AdminGlobalMap from "@/components/admin/AdminGlobalMap";
+import AdminLab from "@/components/admin/AdminLab";
 
 type TabId =
   | "overview"
@@ -43,7 +45,8 @@ type TabId =
   | "qr-jobs"
   | "registrations"
   | "event-log"
-  | "dev-tools";
+  | "dev-tools"
+  | "lab";
 
 interface AdminStats {
   totalUnits: number;
@@ -140,6 +143,7 @@ const AdminPanel = () => {
     { id: "registrations", label: "Rejestracje", icon: UserCheck },
     { id: "event-log", label: "Log zdarzeń", icon: Clock },
     { id: "dev-tools", label: "Narzędzia Dev", icon: Wrench },
+    { id: "lab", label: "Laboratorium", icon: FlaskConical },
   ];
 
   const overviewCards = [
@@ -220,6 +224,7 @@ const AdminPanel = () => {
         {activeTab === "registrations" && <AdminRegistrations />}
         {activeTab === "event-log" && <AdminEventLog />}
         {activeTab === "dev-tools" && <AdminDevTools />}
+        {activeTab === "lab" && <AdminLab />}
       </main>
     </div>
   );
