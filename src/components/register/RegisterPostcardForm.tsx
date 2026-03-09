@@ -17,6 +17,8 @@ const formSchema = z.object({
   recipientMessage: z.string().max(500, "Maksymalnie 500 znaków").default(""),
   recipientEmail: z.union([z.literal(""), z.string().email("Podaj prawidłowy adres email")]).default(""),
   contactOptIn: z.boolean().default(false),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
