@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Database, Loader2 } from "lucide-react";
+import { Database, Globe, Loader2 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
