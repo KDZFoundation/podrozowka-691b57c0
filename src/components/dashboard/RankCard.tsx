@@ -1,10 +1,12 @@
 import { motion, animate } from "framer-motion";
-import { Award, Globe2, Users, ChevronRight, Sparkles, Share2 } from "lucide-react";
+import { Award, Globe2, Users, ChevronRight, Sparkles, Share2, MapPin } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useEffect, useRef, useState, useCallback } from "react";
 import html2canvas from "html2canvas";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 
 const RANK_TIERS = [
   { name: "Zwiadowca", min: 0, accent: "muted-foreground", bg: "bg-muted", ring: "ring-border" },
@@ -47,7 +49,7 @@ const fetchRankData = async (userId: string) => {
   // Fetch profile gamification fields
   const { data: profile } = await supabase
     .from("profiles")
-    .select("total_points, current_rank")
+    .select("total_points, current_rank, total_kilometers")
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -76,12 +78,15 @@ const fetchRankData = async (userId: string) => {
     currentRank: (profile?.current_rank as string) ?? "Zwiadowca",
     uniqueCountries: countrySet.size,
     registeredRelations: regCount,
+    totalKilometers: profile?.total_kilometers ?? 0,
   };
 };
 
 const RankCard = ({ userId }: RankCardProps) => {
   const shareRef = useRef<HTMLDivElement>(null);
   const [isSharing, setIsSharing] = useState(false);
+  const { isAdmin } = useAuth();
+  const { flags } = useFeatureFlags();
 
   const { data, isLoading } = useQuery({
     queryKey: ["rank-card", userId],
@@ -128,6 +133,8 @@ const RankCard = ({ userId }: RankCardProps) => {
   const currentRank = data?.currentRank ?? "Zwiadowca";
   const uniqueCountries = data?.uniqueCountries ?? 0;
   const registeredRelations = data?.registeredRelations ?? 0;
+  const totalKilometers = data?.totalKilometers ?? 0;
+  const showTravelStats = isAdmin && flags.travel_stats;
 
   const tier = getTier(currentRank);
   const nextTier = getNextTier(currentRank);
@@ -277,7 +284,7 @@ const RankCard = ({ userId }: RankCardProps) => {
             </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className={`grid ${showTravelStats ? 'grid-cols-3' : 'grid-cols-2'} gap-3`}>
             <div
               className={`flex items-center gap-2 rounded-lg p-3 ${
                 isLegend ? "bg-white/5" : "bg-card"
@@ -332,6 +339,38 @@ const RankCard = ({ userId }: RankCardProps) => {
                 </p>
               </div>
             </div>
+            {showTravelStats && (
+              <div
+                className={`flex items-center gap-2 rounded-lg p-3 ${
+                  isLegend ? "bg-white/5" : "bg-card"
+                }`}
+              >
+                <MapPin
+                  className={`w-4 h-4 flex-shrink-0 ${
+                    isLegend ? "text-[hsl(var(--gold))]" : "text-primary"
+                  }`}
+                />
+                <div>
+                  <p
+                    className={`font-display text-lg font-bold ${
+                      isLegend ? "text-[hsl(var(--warm-white))]" : "text-foreground"
+                    }`}
+                  >
+                    {totalKilometers.toLocaleString("pl-PL")}
+                    <span className={`text-xs font-normal ml-1 ${
+                      isLegend ? "text-[hsl(var(--gold))]/60" : "text-muted-foreground"
+                    }`}>km</span>
+                  </p>
+                  <p
+                    className={`text-xs ${
+                      isLegend ? "text-[hsl(var(--gold))]/60" : "text-muted-foreground"
+                    }`}
+                  >
+                    Zasięg z Polski
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
