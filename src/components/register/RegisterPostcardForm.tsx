@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { CheckCircle, Loader2, User, MessageSquare, Mail } from "lucide-react";
+import { CheckCircle, Loader2, User, MessageSquare, Mail, MapPin } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -17,6 +17,8 @@ const formSchema = z.object({
   recipientMessage: z.string().max(500, "Maksymalnie 500 znaków").default(""),
   recipientEmail: z.union([z.literal(""), z.string().email("Podaj prawidłowy adres email")]).default(""),
   contactOptIn: z.boolean().default(false),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -29,6 +31,27 @@ interface Props {
 const RegisterPostcardForm = ({ postcard, onSubmit }: Props) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [geoStatus, setGeoStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+
+  const handleGeolocation = () => {
+    if (!navigator.geolocation) {
+      toast({ title: "Twoja przeglądarka nie obsługuje geolokalizacji", variant: "destructive" });
+      return;
+    }
+    setGeoStatus('loading');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        form.setValue('latitude', pos.coords.latitude);
+        form.setValue('longitude', pos.coords.longitude);
+        setGeoStatus('done');
+      },
+      () => {
+        setGeoStatus('error');
+        toast({ title: "Nie udało się pobrać lokalizacji", variant: "destructive" });
+      },
+      { timeout: 10000 }
+    );
+  };
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -142,6 +165,22 @@ const RegisterPostcardForm = ({ postcard, onSubmit }: Props) => {
                   </FormItem>
                 )}
               />
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                disabled={geoStatus === 'loading' || geoStatus === 'done'}
+                onClick={handleGeolocation}
+              >
+                {geoStatus === 'loading' ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Pobieranie lokalizacji...</>
+                ) : geoStatus === 'done' ? (
+                  <><MapPin className="w-4 h-4 mr-2 text-green-500" />Lokalizacja dodana!</>
+                ) : (
+                  <><MapPin className="w-4 h-4 mr-2" />Udostępnij swoją lokalizację (opcjonalnie)</>
+                )}
+              </Button>
 
               <Button type="submit" className="w-full" disabled={isSubmitting}>
                 {isSubmitting ? (
