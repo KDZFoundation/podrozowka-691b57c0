@@ -269,6 +269,13 @@ export type Database = {
             foreignKeyName: "notifications_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "user_gamification_stats"
             referencedColumns: ["user_id"]
           },
@@ -778,6 +785,33 @@ export type Database = {
       }
     }
     Views: {
+      profiles_public: {
+        Row: {
+          avatar_url: string | null
+          current_rank: string | null
+          display_name: string | null
+          total_kilometers: number | null
+          total_points: number | null
+          user_id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          current_rank?: string | null
+          display_name?: string | null
+          total_kilometers?: number | null
+          total_points?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          current_rank?: string | null
+          display_name?: string | null
+          total_kilometers?: number | null
+          total_points?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       traveler_registrations_view: {
         Row: {
           contact_opt_in: boolean | null
