@@ -73,7 +73,7 @@ const fetchPostcards = async (userId: string): Promise<InventoryCard[]> => {
       view_no: u.card_designs?.view_no ?? 0,
       recipient_name: reg?.recipient_name || null,
       recipient_message: reg?.recipient_message || null,
-      recipient_email: reg?.contact_opt_in ? reg?.recipient_email : null,
+      recipient_email: reg?.recipient_email || null, // Already masked by database view
       contact_opt_in: reg?.contact_opt_in || false,
     };
   });
