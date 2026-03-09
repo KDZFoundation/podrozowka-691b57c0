@@ -284,7 +284,7 @@ const RankCard = ({ userId }: RankCardProps) => {
             </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className={`grid ${showTravelStats ? 'grid-cols-3' : 'grid-cols-2'} gap-3`}>
             <div
               className={`flex items-center gap-2 rounded-lg p-3 ${
                 isLegend ? "bg-white/5" : "bg-card"
@@ -339,6 +339,38 @@ const RankCard = ({ userId }: RankCardProps) => {
                 </p>
               </div>
             </div>
+            {showTravelStats && (
+              <div
+                className={`flex items-center gap-2 rounded-lg p-3 ${
+                  isLegend ? "bg-white/5" : "bg-card"
+                }`}
+              >
+                <MapPin
+                  className={`w-4 h-4 flex-shrink-0 ${
+                    isLegend ? "text-[hsl(var(--gold))]" : "text-primary"
+                  }`}
+                />
+                <div>
+                  <p
+                    className={`font-display text-lg font-bold ${
+                      isLegend ? "text-[hsl(var(--warm-white))]" : "text-foreground"
+                    }`}
+                  >
+                    {totalKilometers.toLocaleString("pl-PL")}
+                    <span className={`text-xs font-normal ml-1 ${
+                      isLegend ? "text-[hsl(var(--gold))]/60" : "text-muted-foreground"
+                    }`}>km</span>
+                  </p>
+                  <p
+                    className={`text-xs ${
+                      isLegend ? "text-[hsl(var(--gold))]/60" : "text-muted-foreground"
+                    }`}
+                  >
+                    Zasięg z Polski
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
