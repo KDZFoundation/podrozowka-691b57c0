@@ -44,8 +44,9 @@ const fetchPostcards = async (userId: string): Promise<InventoryCard[]> => {
   let registrations: Record<string, { recipient_name: string; recipient_message: string | null; recipient_email: string | null; contact_opt_in: boolean }> = {};
 
   if (unitIds.length > 0) {
+    // Use the masked view to enforce email privacy at database level
     const { data: regs } = await supabase
-      .from('recipient_registrations')
+      .from('traveler_registrations_view')
       .select('inventory_unit_id, recipient_name, recipient_message, recipient_email, contact_opt_in')
       .in('inventory_unit_id', unitIds);
 
@@ -72,7 +73,7 @@ const fetchPostcards = async (userId: string): Promise<InventoryCard[]> => {
       view_no: u.card_designs?.view_no ?? 0,
       recipient_name: reg?.recipient_name || null,
       recipient_message: reg?.recipient_message || null,
-      recipient_email: reg?.contact_opt_in ? reg?.recipient_email : null,
+      recipient_email: reg?.recipient_email || null, // Already masked by database view
       contact_opt_in: reg?.contact_opt_in || false,
     };
   });

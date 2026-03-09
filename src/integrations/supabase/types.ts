@@ -778,6 +778,53 @@ export type Database = {
       }
     }
     Views: {
+      traveler_registrations_view: {
+        Row: {
+          contact_opt_in: boolean | null
+          created_at: string | null
+          id: string | null
+          inventory_unit_id: string | null
+          latitude: number | null
+          longitude: number | null
+          recipient_email: string | null
+          recipient_message: string | null
+          recipient_name: string | null
+          registered_at: string | null
+        }
+        Insert: {
+          contact_opt_in?: boolean | null
+          created_at?: string | null
+          id?: string | null
+          inventory_unit_id?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          recipient_email?: never
+          recipient_message?: string | null
+          recipient_name?: string | null
+          registered_at?: string | null
+        }
+        Update: {
+          contact_opt_in?: boolean | null
+          created_at?: string | null
+          id?: string | null
+          inventory_unit_id?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          recipient_email?: never
+          recipient_message?: string | null
+          recipient_name?: string | null
+          registered_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipient_registrations_inventory_unit_id_fkey"
+            columns: ["inventory_unit_id"]
+            isOneToOne: true
+            referencedRelation: "inventory_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_gamification_stats: {
         Row: {
           display_name: string | null
