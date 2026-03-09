@@ -26,6 +26,17 @@ const Index = () => {
       <About />
       <DistributionMap />
       <CountryCategories />
+      {isAdmin && flags?.wall_of_connections && (
+        <section className="py-12 bg-muted/30">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-10">
+              <span className="text-sm font-bold text-primary mb-2 block">BETA LAB</span>
+              <h2 className="text-3xl font-display font-bold">Ściana Relacji</h2>
+            </div>
+            <ConnectionsGallery />
+          </div>
+        </section>
+      )}
       <UserRanking />
       <CommunityGallery />
       <LanguageShowcase />
