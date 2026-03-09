@@ -15,6 +15,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 
 const Index = () => {
+  const { isAdmin } = useAuth();
+  const { flags } = useFeatureFlags();
   return (
     <div className="min-h-screen bg-background">
       <Header />
