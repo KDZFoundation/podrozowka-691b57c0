@@ -74,6 +74,8 @@ const RegisterPostcard = () => {
     recipientMessage: string;
     recipientEmail: string;
     contactOptIn: boolean;
+    latitude?: number;
+    longitude?: number;
   }) => {
     const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
     const response = await fetch(
