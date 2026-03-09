@@ -85,6 +85,8 @@ const fetchRankData = async (userId: string) => {
 const RankCard = ({ userId }: RankCardProps) => {
   const shareRef = useRef<HTMLDivElement>(null);
   const [isSharing, setIsSharing] = useState(false);
+  const { isAdmin } = useAuth();
+  const { flags } = useFeatureFlags();
 
   const { data, isLoading } = useQuery({
     queryKey: ["rank-card", userId],
