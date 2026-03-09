@@ -11,6 +11,7 @@ import MyOrders from "@/components/dashboard/MyOrders";
 import MyShipments from "@/components/dashboard/MyShipments";
 import CulturalMissions from "@/components/dashboard/CulturalMissions";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
+import TravelerJournal from "@/components/dashboard/TravelerJournal";
 
 interface Profile {
   id: string;
