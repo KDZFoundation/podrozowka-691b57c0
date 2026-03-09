@@ -1,10 +1,12 @@
 import { motion, animate } from "framer-motion";
-import { Award, Globe2, Users, ChevronRight, Sparkles, Share2 } from "lucide-react";
+import { Award, Globe2, Users, ChevronRight, Sparkles, Share2, MapPin } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useEffect, useRef, useState, useCallback } from "react";
 import html2canvas from "html2canvas";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 
 const RANK_TIERS = [
   { name: "Zwiadowca", min: 0, accent: "muted-foreground", bg: "bg-muted", ring: "ring-border" },
