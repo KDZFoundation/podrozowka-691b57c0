@@ -92,6 +92,8 @@ const RegisterPostcard = () => {
           recipient_message: data.recipientMessage.trim() || undefined,
           recipient_email: data.recipientEmail.trim() || undefined,
           contact_opt_in: data.contactOptIn,
+          latitude: data.latitude ?? undefined,
+          longitude: data.longitude ?? undefined,
         }),
       }
     );
