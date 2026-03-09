@@ -77,7 +77,6 @@ Deno.serve(async (req) => {
       const design = (unit as any).card_designs;
 
       return new Response(JSON.stringify({
-        unit_id: unit.id,
         business_status: unit.business_status,
         fulfillment_status: unit.fulfillment_status,
         registered_at: unit.registered_at,
