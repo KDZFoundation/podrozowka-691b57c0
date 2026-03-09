@@ -9,6 +9,8 @@ import RankCard from "@/components/dashboard/RankCard";
 import MyPostcards from "@/components/dashboard/MyPostcards";
 import MyOrders from "@/components/dashboard/MyOrders";
 import MyShipments from "@/components/dashboard/MyShipments";
+import CulturalMissions from "@/components/dashboard/CulturalMissions";
+import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 
 interface Profile {
   id: string;
