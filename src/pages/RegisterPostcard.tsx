@@ -9,7 +9,6 @@ import RegisterPostcardSuccess from "@/components/register/RegisterPostcardSucce
 import RegisterPostcardAlreadyRegistered from "@/components/register/RegisterPostcardAlreadyRegistered";
 
 export interface PostcardInfo {
-  unit_id: string;
   business_status: string | null;
   fulfillment_status: string;
   registered_at: string | null;
