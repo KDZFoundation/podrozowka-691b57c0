@@ -28,6 +28,7 @@ interface Profile {
 
 const Dashboard = () => {
   const { user, isLoading: authLoading, isAdmin, signOut } = useAuth();
+  const { flags } = useFeatureFlags();
   useRealtimeNotifications();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
