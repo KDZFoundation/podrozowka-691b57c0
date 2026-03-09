@@ -166,6 +166,22 @@ const RegisterPostcardForm = ({ postcard, onSubmit }: Props) => {
                 )}
               />
 
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                disabled={geoStatus === 'loading' || geoStatus === 'done'}
+                onClick={handleGeolocation}
+              >
+                {geoStatus === 'loading' ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Pobieranie lokalizacji...</>
+                ) : geoStatus === 'done' ? (
+                  <><MapPin className="w-4 h-4 mr-2 text-green-500" />Lokalizacja dodana!</>
+                ) : (
+                  <><MapPin className="w-4 h-4 mr-2" />Udostępnij swoją lokalizację (opcjonalnie)</>
+                )}
+              </Button>
+
               <Button type="submit" className="w-full" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Rejestrowanie...</>
