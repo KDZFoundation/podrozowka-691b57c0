@@ -143,6 +143,7 @@ const AdminPanel = () => {
     { id: "registrations", label: "Rejestracje", icon: UserCheck },
     { id: "event-log", label: "Log zdarzeń", icon: Clock },
     { id: "dev-tools", label: "Narzędzia Dev", icon: Wrench },
+    { id: "lab", label: "Laboratorium", icon: FlaskConical },
   ];
 
   const overviewCards = [
