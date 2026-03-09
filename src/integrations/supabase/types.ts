@@ -488,6 +488,7 @@ export type Database = {
           last_name: string | null
           postcards_purchased: number
           postcards_received: number
+          total_kilometers: number
           total_points: number
           updated_at: string
           user_id: string
@@ -505,6 +506,7 @@ export type Database = {
           last_name?: string | null
           postcards_purchased?: number
           postcards_received?: number
+          total_kilometers?: number
           total_points?: number
           updated_at?: string
           user_id: string
@@ -522,6 +524,7 @@ export type Database = {
           last_name?: string | null
           postcards_purchased?: number
           postcards_received?: number
+          total_kilometers?: number
           total_points?: number
           updated_at?: string
           user_id?: string
@@ -623,6 +626,8 @@ export type Database = {
           created_at: string
           id: string
           inventory_unit_id: string
+          latitude: number | null
+          longitude: number | null
           recipient_email: string | null
           recipient_message: string | null
           recipient_name: string
@@ -633,6 +638,8 @@ export type Database = {
           created_at?: string
           id?: string
           inventory_unit_id: string
+          latitude?: number | null
+          longitude?: number | null
           recipient_email?: string | null
           recipient_message?: string | null
           recipient_name: string
@@ -643,6 +650,8 @@ export type Database = {
           created_at?: string
           id?: string
           inventory_unit_id?: string
+          latitude?: number | null
+          longitude?: number | null
           recipient_email?: string | null
           recipient_message?: string | null
           recipient_name?: string
@@ -783,6 +792,10 @@ export type Database = {
       }
     }
     Functions: {
+      calculate_distance: {
+        Args: { lat1: number; lat2: number; lon1: number; lon2: number }
+        Returns: number
+      }
       calculate_user_impact_points: {
         Args: { _user_id: string }
         Returns: undefined
