@@ -1,7 +1,8 @@
 import { motion, animate } from "framer-motion";
-import { Award, Globe2, Users, ChevronRight, Sparkles } from "lucide-react";
+import { Award, Globe2, Users, ChevronRight, Sparkles, Share2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
+import html2canvas from "html2canvas";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -79,11 +80,49 @@ const fetchRankData = async (userId: string) => {
 };
 
 const RankCard = ({ userId }: RankCardProps) => {
+  const shareRef = useRef<HTMLDivElement>(null);
+  const [isSharing, setIsSharing] = useState(false);
+
   const { data, isLoading } = useQuery({
     queryKey: ["rank-card", userId],
     queryFn: () => fetchRankData(userId),
     refetchInterval: 30_000,
   });
+
+  const handleShare = useCallback(async () => {
+    if (!shareRef.current || isSharing) return;
+    setIsSharing(true);
+    try {
+      const canvas = await html2canvas(shareRef.current, {
+        backgroundColor: null,
+        scale: 2,
+        useCORS: true,
+      });
+      const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, "image/png"));
+      if (!blob) return;
+
+      const file = new File([blob], "moj-wplyw-kulturowy.png", { type: "image/png" });
+
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({
+          title: "Mój Wpływ Kulturowy!",
+          text: "Sprawdź mój Wpływ Kulturowy na Podróżówce! 🌍",
+          files: [file],
+        });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "moj-wplyw-kulturowy.png";
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    } catch (e) {
+      // user cancelled share dialog
+    } finally {
+      setIsSharing(false);
+    }
+  }, [isSharing]);
 
   const totalPoints = data?.totalPoints ?? 0;
   const currentRank = data?.currentRank ?? "Zwiadowca";
@@ -111,16 +150,18 @@ const RankCard = ({ userId }: RankCardProps) => {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
-      className={`relative overflow-hidden rounded-2xl shadow-soft ${
-        isLegend
-          ? "bg-gradient-to-br from-[hsl(43,74%,15%)] via-[hsl(43,50%,20%)] to-[hsl(20,20%,12%)] text-[hsl(var(--warm-white))]"
-          : "bg-card text-foreground"
-      }`}
-    >
+    <div>
+      <motion.div
+        ref={shareRef}
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className={`relative overflow-hidden rounded-2xl shadow-soft ${
+          isLegend
+            ? "bg-gradient-to-br from-[hsl(43,74%,15%)] via-[hsl(43,50%,20%)] to-[hsl(20,20%,12%)] text-[hsl(var(--warm-white))]"
+            : "bg-card text-foreground"
+        }`}
+      >
       {/* Decorative shimmer for Legenda */}
       {isLegend && (
         <div className="absolute inset-0 pointer-events-none">
@@ -294,7 +335,21 @@ const RankCard = ({ userId }: RankCardProps) => {
           </div>
         </div>
       </div>
-    </motion.div>
+      </motion.div>
+
+      <button
+        onClick={handleShare}
+        disabled={isSharing}
+        className={`mt-3 w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
+          isLegend
+            ? "bg-[hsl(var(--gold))]/20 text-[hsl(var(--gold-light))] hover:bg-[hsl(var(--gold))]/30"
+            : "bg-primary/10 text-primary hover:bg-primary/20"
+        }`}
+      >
+        <Share2 className="w-4 h-4" />
+        {isSharing ? "Generowanie…" : "Pochwal się statystykami"}
+      </button>
+    </div>
   );
 };
 
