@@ -78,6 +78,7 @@ const fetchRankData = async (userId: string) => {
     currentRank: (profile?.current_rank as string) ?? "Zwiadowca",
     uniqueCountries: countrySet.size,
     registeredRelations: regCount,
+    totalKilometers: profile?.total_kilometers ?? 0,
   };
 };
 
