@@ -80,11 +80,49 @@ const fetchRankData = async (userId: string) => {
 };
 
 const RankCard = ({ userId }: RankCardProps) => {
+  const shareRef = useRef<HTMLDivElement>(null);
+  const [isSharing, setIsSharing] = useState(false);
+
   const { data, isLoading } = useQuery({
     queryKey: ["rank-card", userId],
     queryFn: () => fetchRankData(userId),
     refetchInterval: 30_000,
   });
+
+  const handleShare = useCallback(async () => {
+    if (!shareRef.current || isSharing) return;
+    setIsSharing(true);
+    try {
+      const canvas = await html2canvas(shareRef.current, {
+        backgroundColor: null,
+        scale: 2,
+        useCORS: true,
+      });
+      const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, "image/png"));
+      if (!blob) return;
+
+      const file = new File([blob], "moj-wplyw-kulturowy.png", { type: "image/png" });
+
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({
+          title: "Mój Wpływ Kulturowy!",
+          text: "Sprawdź mój Wpływ Kulturowy na Podróżówce! 🌍",
+          files: [file],
+        });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "moj-wplyw-kulturowy.png";
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    } catch (e) {
+      // user cancelled share dialog
+    } finally {
+      setIsSharing(false);
+    }
+  }, [isSharing]);
 
   const totalPoints = data?.totalPoints ?? 0;
   const currentRank = data?.currentRank ?? "Zwiadowca";
