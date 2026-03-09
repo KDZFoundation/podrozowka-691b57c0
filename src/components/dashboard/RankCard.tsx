@@ -133,6 +133,8 @@ const RankCard = ({ userId }: RankCardProps) => {
   const currentRank = data?.currentRank ?? "Zwiadowca";
   const uniqueCountries = data?.uniqueCountries ?? 0;
   const registeredRelations = data?.registeredRelations ?? 0;
+  const totalKilometers = data?.totalKilometers ?? 0;
+  const showTravelStats = isAdmin && flags.travel_stats;
 
   const tier = getTier(currentRank);
   const nextTier = getNextTier(currentRank);
