@@ -39,12 +39,12 @@ const FLAG_URL = (iso2: string) =>
   `https://flagcdn.com/w40/${iso2.toLowerCase()}.png`;
 
 const fetchRanking = async (): Promise<RankedUser[]> => {
-  const { data: profiles, error } = await supabase
+  const { data: profiles, error } = await (supabase
     .from("profiles_public" as any)
     .select("user_id, display_name, avatar_url, total_points, current_rank")
     .gt("total_points", 0)
     .order("total_points", { ascending: false })
-    .limit(10);
+    .limit(10)) as { data: { user_id: string; display_name: string | null; avatar_url: string | null; total_points: number; current_rank: string }[] | null; error: any };
 
   if (error) throw error;
   if (!profiles || profiles.length === 0) return [];
