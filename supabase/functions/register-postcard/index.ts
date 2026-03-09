@@ -96,7 +96,18 @@ Deno.serve(async (req) => {
 
     if (req.method === 'POST') {
       const body = await req.json();
-      const { token, recipient_name, recipient_message, recipient_email, contact_opt_in } = body;
+      const { token, recipient_name, recipient_message, recipient_email, contact_opt_in, latitude, longitude } = body;
+
+      // Validate coordinates if provided
+      if (latitude !== undefined || longitude !== undefined) {
+        if (typeof latitude !== 'number' || typeof longitude !== 'number' ||
+            latitude < -90 || latitude > 90 ||
+            longitude < -180 || longitude > 180) {
+          return new Response(JSON.stringify({ error: 'Nieprawidłowe współrzędne geograficzne' }), {
+            status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
 
       if (!token || !recipient_name) {
         return new Response(JSON.stringify({ error: 'token i recipient_name są wymagane' }), {
