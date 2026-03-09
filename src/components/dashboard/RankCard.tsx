@@ -335,7 +335,21 @@ const RankCard = ({ userId }: RankCardProps) => {
           </div>
         </div>
       </div>
-    </motion.div>
+      </motion.div>
+
+      <button
+        onClick={handleShare}
+        disabled={isSharing}
+        className={`mt-3 w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
+          isLegend
+            ? "bg-[hsl(var(--gold))]/20 text-[hsl(var(--gold-light))] hover:bg-[hsl(var(--gold))]/30"
+            : "bg-primary/10 text-primary hover:bg-primary/20"
+        }`}
+      >
+        <Share2 className="w-4 h-4" />
+        {isSharing ? "Generowanie…" : "Pochwal się statystykami"}
+      </button>
+    </div>
   );
 };
 
