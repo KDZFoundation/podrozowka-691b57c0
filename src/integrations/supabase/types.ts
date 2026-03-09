@@ -88,6 +88,27 @@ export type Database = {
         }
         Relationships: []
       }
+      feature_flags: {
+        Row: {
+          description: string
+          is_enabled: boolean
+          key: string
+          name: string
+        }
+        Insert: {
+          description?: string
+          is_enabled?: boolean
+          key: string
+          name: string
+        }
+        Update: {
+          description?: string
+          is_enabled?: boolean
+          key?: string
+          name?: string
+        }
+        Relationships: []
+      }
       inventory_unit_events: {
         Row: {
           actor_id: string | null
