@@ -49,7 +49,7 @@ const fetchRankData = async (userId: string) => {
   // Fetch profile gamification fields
   const { data: profile } = await supabase
     .from("profiles")
-    .select("total_points, current_rank")
+    .select("total_points, current_rank, total_kilometers")
     .eq("user_id", userId)
     .maybeSingle();
 
