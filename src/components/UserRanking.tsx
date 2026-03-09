@@ -40,7 +40,7 @@ const FLAG_URL = (iso2: string) =>
 
 const fetchRanking = async (): Promise<RankedUser[]> => {
   const { data: profiles, error } = await supabase
-    .from("profiles")
+    .from("profiles_public" as any)
     .select("user_id, display_name, avatar_url, total_points, current_rank")
     .gt("total_points", 0)
     .order("total_points", { ascending: false })

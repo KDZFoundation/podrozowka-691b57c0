@@ -35,7 +35,7 @@ const fetchGallery = async (): Promise<RegisteredPostcard[]> => {
 
   const travelerIds = [...new Set(units.map(u => u.traveler_user_id).filter(Boolean))] as string[];
   const { data: profiles } = travelerIds.length > 0
-    ? await supabase.from('profiles').select('user_id, display_name').in('user_id', travelerIds)
+    ? await supabase.from('profiles_public' as any).select('user_id, display_name').in('user_id', travelerIds)
     : { data: [] };
 
   const regMap = new Map<string, { recipient_name: string; recipient_message: string | null }>();
