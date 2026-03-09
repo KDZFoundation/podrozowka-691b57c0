@@ -122,10 +122,13 @@ const Dashboard = () => {
 
       <main className="container mx-auto px-4 py-8 space-y-6">
         <RankCard userId={user.id} />
-        {flags?.cultural_missions && (
-          <div className="mt-8">
-            <h3 className="text-xl font-display font-bold mb-4 text-foreground">Misje Kulturowe (BETA)</h3>
-            <CulturalMissions />
+        {flags?.travelers_journal && (
+          <div className="mt-12">
+            <div className="flex items-center gap-2 mb-6">
+              <h3 className="text-2xl font-display font-bold text-foreground">Dziennik Ambasadora</h3>
+              <span className="px-2 py-1 text-xs font-bold bg-primary/10 text-primary rounded-full">BETA</span>
+            </div>
+            <TravelerJournal />
           </div>
         )}
         {activeTab === 'overview' && <UserStats profile={profile} userId={user.id} />}
