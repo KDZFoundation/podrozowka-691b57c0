@@ -45,7 +45,8 @@ type TabId =
   | "qr-jobs"
   | "registrations"
   | "event-log"
-  | "dev-tools";
+  | "dev-tools"
+  | "lab";
 
 interface AdminStats {
   totalUnits: number;
