@@ -29,8 +29,25 @@ const MOCK_RECIPIENTS = [
 const randomHex = (len: number) =>
   Array.from({ length: len }, () => Math.floor(Math.random() * 16).toString(16)).join("");
 
+const GLOBAL_LOCATIONS = [
+  { city: "Tokio", country_name: "Japonia", iso2: "JP", iso3: "JPN", lat: 35.68, lng: 139.69, name: "Yuki", message: "Arigato! Niesamowita inicjatywa! 🎌" },
+  { city: "Sydney", country_name: "Australia", iso2: "AU", iso3: "AUS", lat: -33.86, lng: 151.20, name: "Oliver", message: "G'day mate! Kartka dotarła aż tutaj! 🦘" },
+  { city: "Nowy Jork", country_name: "Stany Zjednoczone", iso2: "US", iso3: "USA", lat: 40.71, lng: -74.00, name: "Sarah", message: "Love from NYC! 🗽" },
+  { city: "Rio de Janeiro", country_name: "Brazylia", iso2: "BR", iso3: "BRA", lat: -22.90, lng: -43.17, name: "Carlos", message: "Obrigado! Pozdrowienia z plaży Copacabana 🏖️" },
+  { city: "Rzym", country_name: "Włochy", iso2: "IT", iso3: "ITA", lat: 41.90, lng: 12.49, name: "Luigi", message: "Mamma mia, co za piękna kartka z Polski! 🍕" },
+  { city: "Kapsztad", country_name: "Republika Południowej Afryki", iso2: "ZA", iso3: "ZAF", lat: -33.92, lng: 18.42, name: "Nelson", message: "Wow, to najdalsza podróż tej kartki! 🦁" },
+  { city: "Paryż", country_name: "Francja", iso2: "FR", iso3: "FRA", lat: 48.85, lng: 2.35, name: "Amelie", message: "Merci beaucoup! 🥐" },
+  { city: "Bangkok", country_name: "Tajlandia", iso2: "TH", iso3: "THA", lat: 13.75, lng: 100.50, name: "Somchai", message: "Sawadee krap! Kartka z Polski w Bangkoku! 🏯" },
+  { city: "Buenos Aires", country_name: "Argentyna", iso2: "AR", iso3: "ARG", lat: -34.60, lng: -58.38, name: "Mateo", message: "¡Increíble! Saludos desde Argentina! 🧉" },
+  { city: "Reykjavik", country_name: "Islandia", iso2: "IS", iso3: "ISL", lat: 64.13, lng: -21.90, name: "Björk", message: "Hæ! Kartka dotarła na koniec świata! 🌋" },
+  { city: "Seul", country_name: "Korea Południowa", iso2: "KR", iso3: "KOR", lat: 37.56, lng: 126.97, name: "Min-jun", message: "감사합니다! Piękna kartka! 🇰🇷" },
+  { city: "Marrakesz", country_name: "Maroko", iso2: "MA", iso3: "MAR", lat: 31.63, lng: -7.98, name: "Fatima", message: "Shukran! Pozdrowienia z medyny! 🕌" },
+  { city: "Vancouver", country_name: "Kanada", iso2: "CA", iso3: "CAN", lat: 49.28, lng: -123.12, name: "Liam", message: "Thanks eh! Love from the mountains! 🏔️" },
+];
+
 const AdminDevTools = () => {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSeeding, setIsSeeding] = useState(false);
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
