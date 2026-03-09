@@ -150,16 +150,18 @@ const RankCard = ({ userId }: RankCardProps) => {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
-      className={`relative overflow-hidden rounded-2xl shadow-soft ${
-        isLegend
-          ? "bg-gradient-to-br from-[hsl(43,74%,15%)] via-[hsl(43,50%,20%)] to-[hsl(20,20%,12%)] text-[hsl(var(--warm-white))]"
-          : "bg-card text-foreground"
-      }`}
-    >
+    <div>
+      <motion.div
+        ref={shareRef}
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className={`relative overflow-hidden rounded-2xl shadow-soft ${
+          isLegend
+            ? "bg-gradient-to-br from-[hsl(43,74%,15%)] via-[hsl(43,50%,20%)] to-[hsl(20,20%,12%)] text-[hsl(var(--warm-white))]"
+            : "bg-card text-foreground"
+        }`}
+      >
       {/* Decorative shimmer for Legenda */}
       {isLegend && (
         <div className="absolute inset-0 pointer-events-none">
