@@ -123,7 +123,7 @@ const Dashboard = () => {
         <RankCard userId={user.id} />
         {flags?.cultural_missions && (
           <div className="mt-8">
-            <h3 className="text-xl font-display font-bold mb-4">Misje Kulturowe (BETA)</h3>
+            <h3 className="text-xl font-display font-bold mb-4 text-foreground">Misje Kulturowe (BETA)</h3>
             <CulturalMissions />
           </div>
         )}
