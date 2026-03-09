@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Database, Loader2 } from "lucide-react";
+import { Database, Globe, Loader2 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -29,8 +29,25 @@ const MOCK_RECIPIENTS = [
 const randomHex = (len: number) =>
   Array.from({ length: len }, () => Math.floor(Math.random() * 16).toString(16)).join("");
 
+const GLOBAL_LOCATIONS = [
+  { city: "Tokio", country_name: "Japonia", iso2: "JP", iso3: "JPN", lat: 35.68, lng: 139.69, name: "Yuki", message: "Arigato! Niesamowita inicjatywa! 🎌" },
+  { city: "Sydney", country_name: "Australia", iso2: "AU", iso3: "AUS", lat: -33.86, lng: 151.20, name: "Oliver", message: "G'day mate! Kartka dotarła aż tutaj! 🦘" },
+  { city: "Nowy Jork", country_name: "Stany Zjednoczone", iso2: "US", iso3: "USA", lat: 40.71, lng: -74.00, name: "Sarah", message: "Love from NYC! 🗽" },
+  { city: "Rio de Janeiro", country_name: "Brazylia", iso2: "BR", iso3: "BRA", lat: -22.90, lng: -43.17, name: "Carlos", message: "Obrigado! Pozdrowienia z plaży Copacabana 🏖️" },
+  { city: "Rzym", country_name: "Włochy", iso2: "IT", iso3: "ITA", lat: 41.90, lng: 12.49, name: "Luigi", message: "Mamma mia, co za piękna kartka z Polski! 🍕" },
+  { city: "Kapsztad", country_name: "Republika Południowej Afryki", iso2: "ZA", iso3: "ZAF", lat: -33.92, lng: 18.42, name: "Nelson", message: "Wow, to najdalsza podróż tej kartki! 🦁" },
+  { city: "Paryż", country_name: "Francja", iso2: "FR", iso3: "FRA", lat: 48.85, lng: 2.35, name: "Amelie", message: "Merci beaucoup! 🥐" },
+  { city: "Bangkok", country_name: "Tajlandia", iso2: "TH", iso3: "THA", lat: 13.75, lng: 100.50, name: "Somchai", message: "Sawadee krap! Kartka z Polski w Bangkoku! 🏯" },
+  { city: "Buenos Aires", country_name: "Argentyna", iso2: "AR", iso3: "ARG", lat: -34.60, lng: -58.38, name: "Mateo", message: "¡Increíble! Saludos desde Argentina! 🧉" },
+  { city: "Reykjavik", country_name: "Islandia", iso2: "IS", iso3: "ISL", lat: 64.13, lng: -21.90, name: "Björk", message: "Hæ! Kartka dotarła na koniec świata! 🌋" },
+  { city: "Seul", country_name: "Korea Południowa", iso2: "KR", iso3: "KOR", lat: 37.56, lng: 126.97, name: "Min-jun", message: "감사합니다! Piękna kartka! 🇰🇷" },
+  { city: "Marrakesz", country_name: "Maroko", iso2: "MA", iso3: "MAR", lat: 31.63, lng: -7.98, name: "Fatima", message: "Shukran! Pozdrowienia z medyny! 🕌" },
+  { city: "Vancouver", country_name: "Kanada", iso2: "CA", iso3: "CAN", lat: 49.28, lng: -123.12, name: "Liam", message: "Thanks eh! Love from the mountains! 🏔️" },
+];
+
 const AdminDevTools = () => {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSeeding, setIsSeeding] = useState(false);
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
@@ -200,6 +217,109 @@ const AdminDevTools = () => {
     }
   };
 
+  const seedGlobalData = async () => {
+    if (!user) return;
+    setIsSeeding(true);
+
+    try {
+      for (let i = 0; i < GLOBAL_LOCATIONS.length; i++) {
+        const loc = GLOBAL_LOCATIONS[i];
+        const daysAgo = GLOBAL_LOCATIONS.length - i;
+        const createdDate = new Date(Date.now() - daysAgo * 3 * 24 * 60 * 60 * 1000).toISOString();
+        const registeredDate = new Date(Date.now() - daysAgo * 1.5 * 24 * 60 * 60 * 1000).toISOString();
+
+        // Country upsert
+        let countryId: string;
+        const { data: existing } = await supabase
+          .from("countries")
+          .select("id")
+          .eq("iso2", loc.iso2)
+          .maybeSingle();
+
+        if (existing) {
+          countryId = existing.id;
+        } else {
+          const { data, error } = await supabase
+            .from("countries")
+            .insert({ name_pl: loc.country_name, iso2: loc.iso2, iso3: loc.iso3, slug: loc.country_name.toLowerCase().replace(/\s+/g, "-"), active: true })
+            .select("id")
+            .single();
+          if (error) throw new Error(`Country: ${error.message}`);
+          countryId = data.id;
+        }
+
+        // Design upsert
+        let designId: string;
+        const { data: existingDesign } = await supabase
+          .from("card_designs")
+          .select("id")
+          .eq("country_id", countryId)
+          .limit(1)
+          .maybeSingle();
+
+        if (existingDesign) {
+          designId = existingDesign.id;
+        } else {
+          const { data, error } = await supabase
+            .from("card_designs")
+            .insert({ country_id: countryId, view_no: 1, title: `Widok ${loc.city}`, language_code: "pl", active: true })
+            .select("id")
+            .single();
+          if (error) throw new Error(`Design: ${error.message}`);
+          designId = data.id;
+        }
+
+        // Stock batch
+        const { data: batch, error: batchErr } = await supabase
+          .from("stock_batches")
+          .insert({ card_design_id: designId, name: `Seed ${loc.city} ${Date.now()}`, quantity: 1 })
+          .select("id")
+          .single();
+        if (batchErr) throw new Error(`Batch: ${batchErr.message}`);
+
+        // Inventory unit
+        const code = `INV-${loc.iso2}-V01-SEED${String(i).padStart(3, "0")}${randomHex(4)}`;
+        const { data: unit, error: unitErr } = await supabase
+          .from("inventory_units")
+          .insert({
+            stock_batch_id: batch.id,
+            card_design_id: designId,
+            internal_inventory_code: code,
+            fulfillment_status: "shipped" as const,
+            business_status: "registered" as const,
+            traveler_user_id: user.id,
+            shipped_at: createdDate,
+            registered_at: registeredDate,
+            public_claim_code: `PDZ-${randomHex(4).toUpperCase()}-${randomHex(4).toUpperCase()}`,
+            public_claim_token_hash: randomHex(32),
+          })
+          .select("id")
+          .single();
+        if (unitErr) throw new Error(`Unit: ${unitErr.message}`);
+
+        // Registration
+        const { error: regErr } = await supabase.from("recipient_registrations").insert({
+          inventory_unit_id: unit.id,
+          recipient_name: loc.name,
+          recipient_message: loc.message,
+          latitude: loc.lat,
+          longitude: loc.lng,
+          contact_opt_in: true,
+          registered_at: registeredDate,
+        });
+        if (regErr) throw new Error(`Registration: ${regErr.message}`);
+      }
+
+      toast.success(`Rozsiano ${GLOBAL_LOCATIONS.length} pocztówek po świecie!`);
+      queryClient.invalidateQueries();
+    } catch (err: any) {
+      console.error("Seed global error:", err);
+      toast.error("Błąd: " + (err?.message || "Nieznany błąd"));
+    } finally {
+      setIsSeeding(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <h2 className="font-display text-2xl font-bold text-foreground">Narzędzia Dev</h2>
@@ -222,6 +342,29 @@ const AdminDevTools = () => {
               <Database className="w-4 h-4" />
             )}
             {isGenerating ? "Generowanie…" : "Wygeneruj paczkę testową (Mock Data)"}
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card className="max-w-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Globe className="w-5 h-5 text-primary" />
+            Generator Danych Mapy
+          </CardTitle>
+          <CardDescription>
+            Rozsiej {GLOBAL_LOCATIONS.length} pocztówek po całym świecie z realistycznymi lokacjami i wiadomościami.
+            Dane pojawią się na mapie, w Dzienniku Ambasadora i w Misjach Kulturowych.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button onClick={seedGlobalData} disabled={isSeeding}>
+            {isSeeding ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Globe className="w-4 h-4" />
+            )}
+            {isSeeding ? "Rozsiewanie…" : "Rozsiej pocztówki po świecie"}
           </Button>
         </CardContent>
       </Card>
