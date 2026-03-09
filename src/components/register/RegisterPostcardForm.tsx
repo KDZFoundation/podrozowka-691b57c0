@@ -31,6 +31,27 @@ interface Props {
 const RegisterPostcardForm = ({ postcard, onSubmit }: Props) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [geoStatus, setGeoStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+
+  const handleGeolocation = () => {
+    if (!navigator.geolocation) {
+      toast({ title: "Twoja przeglądarka nie obsługuje geolokalizacji", variant: "destructive" });
+      return;
+    }
+    setGeoStatus('loading');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        form.setValue('latitude', pos.coords.latitude);
+        form.setValue('longitude', pos.coords.longitude);
+        setGeoStatus('done');
+      },
+      () => {
+        setGeoStatus('error');
+        toast({ title: "Nie udało się pobrać lokalizacji", variant: "destructive" });
+      },
+      { timeout: 10000 }
+    );
+  };
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
