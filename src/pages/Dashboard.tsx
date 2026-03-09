@@ -121,6 +121,12 @@ const Dashboard = () => {
 
       <main className="container mx-auto px-4 py-8 space-y-6">
         <RankCard userId={user.id} />
+        {flags?.cultural_missions && (
+          <div className="mt-8">
+            <h3 className="text-xl font-display font-bold mb-4">Misje Kulturowe (BETA)</h3>
+            <CulturalMissions />
+          </div>
+        )}
         {activeTab === 'overview' && <UserStats profile={profile} userId={user.id} />}
         {activeTab === 'my-orders' && <MyOrders userId={user.id} />}
         {activeTab === 'my-shipments' && <MyShipments userId={user.id} />}
