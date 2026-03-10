@@ -131,7 +131,12 @@ const Dashboard = () => {
             <TravelerJournal />
           </div>
         )}
-        {activeTab === 'overview' && <UserStats profile={profile} userId={user.id} />}
+        {activeTab === 'overview' && (
+          <>
+            <UserStats profile={profile} userId={user.id} />
+            {flags?.cultural_missions && <CulturalMissions />}
+          </>
+        )}
         {activeTab === 'my-orders' && <MyOrders userId={user.id} />}
         {activeTab === 'my-shipments' && <MyShipments userId={user.id} />}
         {activeTab === 'my-postcards' && <MyPostcards userId={user.id} />}
