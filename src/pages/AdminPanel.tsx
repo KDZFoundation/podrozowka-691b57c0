@@ -34,6 +34,7 @@ import AdminEventLog from "@/components/admin/AdminEventLog";
 import AdminDevTools from "@/components/admin/AdminDevTools";
 import AdminGlobalMap from "@/components/admin/AdminGlobalMap";
 import AdminLab from "@/components/admin/AdminLab";
+import AdminGamification from "@/components/admin/AdminGamification";
 
 type TabId =
   | "overview"
