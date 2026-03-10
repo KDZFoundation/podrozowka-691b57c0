@@ -146,6 +146,7 @@ const AdminPanel = () => {
     { id: "registrations", label: "Rejestracje", icon: UserCheck },
     { id: "event-log", label: "Log zdarzeń", icon: Clock },
     { id: "dev-tools", label: "Narzędzia Dev", icon: Wrench },
+    { id: "gamification", label: "Grywalizacja", icon: Trophy },
     { id: "lab", label: "Laboratorium", icon: FlaskConical },
   ];
 
