@@ -15,12 +15,15 @@ const RANK_TIERS = [
   { name: "Legenda Podróżówki", min: 7500, accent: "[hsl(var(--gold))]", bg: "bg-[hsl(var(--gold))]/5", ring: "ring-[hsl(var(--gold))]" },
 ];
 
+const DEFAULT_TIER = { name: "", min: 0, accent: "primary", bg: "bg-primary/10", ring: "ring-primary" };
+
 function getTier(rank: string) {
-  return RANK_TIERS.find((t) => t.name === rank) ?? RANK_TIERS[0];
+  return RANK_TIERS.find((t) => t.name === rank) ?? { ...DEFAULT_TIER, name: rank };
 }
 
 function getNextTier(rank: string) {
   const idx = RANK_TIERS.findIndex((t) => t.name === rank);
+  if (idx === -1) return null; // unknown rank — no next tier info
   return idx < RANK_TIERS.length - 1 ? RANK_TIERS[idx + 1] : null;
 }
 

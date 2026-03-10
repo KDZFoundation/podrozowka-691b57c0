@@ -109,6 +109,27 @@ export type Database = {
         }
         Relationships: []
       }
+      gamification_tiers: {
+        Row: {
+          created_at: string
+          id: string
+          min_points: number
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          min_points: number
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          min_points?: number
+          name?: string
+        }
+        Relationships: []
+      }
       inventory_unit_events: {
         Row: {
           actor_id: string | null

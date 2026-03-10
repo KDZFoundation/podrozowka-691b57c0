@@ -19,6 +19,7 @@ import {
   Wrench,
   Map as MapIcon,
   FlaskConical,
+  Trophy,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,6 +34,7 @@ import AdminEventLog from "@/components/admin/AdminEventLog";
 import AdminDevTools from "@/components/admin/AdminDevTools";
 import AdminGlobalMap from "@/components/admin/AdminGlobalMap";
 import AdminLab from "@/components/admin/AdminLab";
+import AdminGamification from "@/components/admin/AdminGamification";
 
 type TabId =
   | "overview"
@@ -46,7 +48,8 @@ type TabId =
   | "registrations"
   | "event-log"
   | "dev-tools"
-  | "lab";
+  | "lab"
+  | "gamification";
 
 interface AdminStats {
   totalUnits: number;
@@ -143,6 +146,7 @@ const AdminPanel = () => {
     { id: "registrations", label: "Rejestracje", icon: UserCheck },
     { id: "event-log", label: "Log zdarzeń", icon: Clock },
     { id: "dev-tools", label: "Narzędzia Dev", icon: Wrench },
+    { id: "gamification", label: "Grywalizacja", icon: Trophy },
     { id: "lab", label: "Laboratorium", icon: FlaskConical },
   ];
 
@@ -224,6 +228,7 @@ const AdminPanel = () => {
         {activeTab === "registrations" && <AdminRegistrations />}
         {activeTab === "event-log" && <AdminEventLog />}
         {activeTab === "dev-tools" && <AdminDevTools />}
+        {activeTab === "gamification" && <AdminGamification />}
         {activeTab === "lab" && <AdminLab />}
       </main>
     </div>
