@@ -218,7 +218,7 @@ const UserRanking = () => {
 
         <div className="max-w-2xl mx-auto">
           {topUsers.map((user, index) => {
-            const rankStyle = RANK_STYLE[user.current_rank] ?? RANK_STYLE.Zwiadowca;
+            const rankStyle = getRankStyle(user.current_rank);
             const isLegend = user.current_rank === "Legenda Podróżówki";
             const isHovered = hoveredId === user.user_id;
 

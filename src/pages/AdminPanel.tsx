@@ -228,6 +228,7 @@ const AdminPanel = () => {
         {activeTab === "registrations" && <AdminRegistrations />}
         {activeTab === "event-log" && <AdminEventLog />}
         {activeTab === "dev-tools" && <AdminDevTools />}
+        {activeTab === "gamification" && <AdminGamification />}
         {activeTab === "lab" && <AdminLab />}
       </main>
     </div>
