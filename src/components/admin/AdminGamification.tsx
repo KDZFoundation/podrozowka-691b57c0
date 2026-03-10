@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, Loader2, Trophy } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Trophy, Settings, Save } from "lucide-react";
 import { toast } from "sonner";
 
 interface Tier {
@@ -16,7 +16,95 @@ interface Tier {
   min_points: number;
 }
 
-const AdminGamification = () => {
+interface GamificationConfig {
+  points_per_unit: number;
+  points_per_country: number;
+  points_per_registration: number;
+}
+
+// --- Scoring Config Section ---
+const ScoringConfig = () => {
+  const queryClient = useQueryClient();
+  const [form, setForm] = useState<GamificationConfig>({ points_per_unit: 10, points_per_country: 50, points_per_registration: 100 });
+
+  const { data: config, isLoading } = useQuery({
+    queryKey: ["admin-gamification-config"],
+    queryFn: async () => {
+      const { data, error } = await (supabase.from as any)("gamification_config")
+        .select("points_per_unit, points_per_country, points_per_registration")
+        .eq("id", 1)
+        .single();
+      if (error) throw error;
+      return data as GamificationConfig;
+    },
+  });
+
+  useEffect(() => {
+    if (config) setForm(config);
+  }, [config]);
+
+  const mutation = useMutation({
+    mutationFn: async (values: GamificationConfig) => {
+      const { error } = await (supabase.from as any)("gamification_config")
+        .update(values)
+        .eq("id", 1);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-gamification-config"] });
+      toast.success("Zapisano konfigurację punktacji");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const handleSave = () => {
+    if (form.points_per_unit < 0 || form.points_per_country < 0 || form.points_per_registration < 0) {
+      return toast.error("Punkty muszą być >= 0");
+    }
+    mutation.mutate(form);
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Settings className="w-5 h-5 text-primary" /> Konfiguracja Punktacji
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div>
+              <Label htmlFor="pts-unit">Punkty za sztukę kartki</Label>
+              <Input id="pts-unit" type="number" min="0" value={form.points_per_unit} onChange={(e) => setForm((f) => ({ ...f, points_per_unit: parseInt(e.target.value) || 0 }))} />
+            </div>
+            <div>
+              <Label htmlFor="pts-country">Punkty za unikalny kraj</Label>
+              <Input id="pts-country" type="number" min="0" value={form.points_per_country} onChange={(e) => setForm((f) => ({ ...f, points_per_country: parseInt(e.target.value) || 0 }))} />
+            </div>
+            <div>
+              <Label htmlFor="pts-reg">Punkty za zarejestrowaną relację</Label>
+              <Input id="pts-reg" type="number" min="0" value={form.points_per_registration} onChange={(e) => setForm((f) => ({ ...f, points_per_registration: parseInt(e.target.value) || 0 }))} />
+            </div>
+            <div className="sm:col-span-3 flex justify-end">
+              <Button onClick={handleSave} disabled={mutation.isPending} className="gap-2">
+                {mutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Zapisz punktację
+              </Button>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+// --- Tiers Section ---
+const TiersSection = () => {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -69,24 +157,9 @@ const AdminGamification = () => {
     onError: (e: any) => toast.error(e.message),
   });
 
-  const openAdd = () => {
-    setEditingTier(null);
-    setFormName("");
-    setFormMinPoints("");
-    setDialogOpen(true);
-  };
-
-  const openEdit = (tier: Tier) => {
-    setEditingTier(tier);
-    setFormName(tier.name);
-    setFormMinPoints(String(tier.min_points));
-    setDialogOpen(true);
-  };
-
-  const closeDialog = () => {
-    setDialogOpen(false);
-    setEditingTier(null);
-  };
+  const openAdd = () => { setEditingTier(null); setFormName(""); setFormMinPoints(""); setDialogOpen(true); };
+  const openEdit = (tier: Tier) => { setEditingTier(tier); setFormName(tier.name); setFormMinPoints(String(tier.min_points)); setDialogOpen(true); };
+  const closeDialog = () => { setDialogOpen(false); setEditingTier(null); };
 
   const handleSubmit = () => {
     const name = formName.trim();
@@ -97,10 +170,10 @@ const AdminGamification = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <>
       <div className="flex items-center justify-between">
-        <h2 className="font-display text-2xl font-bold text-foreground">Progi grywalizacji</h2>
-        <Button onClick={openAdd} className="gap-2">
+        <h3 className="font-display text-lg font-semibold text-foreground">Poziomy Rang (Tiers)</h3>
+        <Button onClick={openAdd} size="sm" className="gap-2">
           <Plus className="w-4 h-4" /> Dodaj rangę
         </Button>
       </div>
@@ -137,11 +210,7 @@ const AdminGamification = () => {
                         <Button variant="ghost" size="icon" onClick={() => openEdit(tier)}>
                           <Pencil className="w-4 h-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => { setDeletingTier(tier); setDeleteDialogOpen(true); }}
-                        >
+                        <Button variant="ghost" size="icon" onClick={() => { setDeletingTier(tier); setDeleteDialogOpen(true); }}>
                           <Trash2 className="w-4 h-4 text-destructive" />
                         </Button>
                       </div>
@@ -154,7 +223,6 @@ const AdminGamification = () => {
         </CardContent>
       </Card>
 
-      {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -180,7 +248,6 @@ const AdminGamification = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -198,8 +265,17 @@ const AdminGamification = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 };
+
+// --- Main Component ---
+const AdminGamification = () => (
+  <div className="space-y-6">
+    <h2 className="font-display text-2xl font-bold text-foreground">Grywalizacja</h2>
+    <ScoringConfig />
+    <TiersSection />
+  </div>
+);
 
 export default AdminGamification;
