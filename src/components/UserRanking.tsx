@@ -35,6 +35,13 @@ const RANK_STYLE: Record<string, { badgeClass: string; glow: string }> = {
   },
 };
 
+const DEFAULT_RANK_STYLE = {
+  badgeClass: "bg-primary/10 text-primary border-primary/30",
+  glow: "shadow-[0_0_12px_hsl(var(--primary)/0.15)]",
+};
+
+const getRankStyle = (rank: string) => RANK_STYLE[rank] ?? DEFAULT_RANK_STYLE;
+
 const FLAG_URL = (iso2: string) =>
   `https://flagcdn.com/w40/${iso2.toLowerCase()}.png`;
 
