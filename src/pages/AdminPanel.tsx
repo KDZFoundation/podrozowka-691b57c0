@@ -48,7 +48,8 @@ type TabId =
   | "registrations"
   | "event-log"
   | "dev-tools"
-  | "lab";
+  | "lab"
+  | "gamification";
 
 interface AdminStats {
   totalUnits: number;
