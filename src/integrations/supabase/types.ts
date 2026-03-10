@@ -109,6 +109,30 @@ export type Database = {
         }
         Relationships: []
       }
+      gamification_config: {
+        Row: {
+          id: number
+          points_per_country: number
+          points_per_registration: number
+          points_per_unit: number
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          points_per_country?: number
+          points_per_registration?: number
+          points_per_unit?: number
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          points_per_country?: number
+          points_per_registration?: number
+          points_per_unit?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gamification_tiers: {
         Row: {
           created_at: string
