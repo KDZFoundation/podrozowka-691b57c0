@@ -11,6 +11,8 @@ import NotFound from "./pages/NotFound";
 import RegisterPostcard from "./pages/RegisterPostcard";
 import AdminPanel from "./pages/AdminPanel";
 import Settings from "./pages/Settings";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Terms from "./pages/Terms";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +30,8 @@ const App = () => (
             <Route path="/settings" element={<Settings />} />
             <Route path="/r/:qrToken" element={<RegisterPostcard />} />
             <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/polityka-prywatnosci" element={<PrivacyPolicy />} />
+            <Route path="/regulamin" element={<Terms />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
